@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>tech.xigam</groupId>
+    <artifactId>CCH</artifactId>
+    <version>1.1.1</version>
+
+    <!-- CHANGE LOG -->
+    <!-- 1.0.2 - Added implementation of deleting commands -->
+    <!-- 1.0.3 - Fix an issue with option string arguments -->
+    <!-- 1.0.4 - Added DM ephemeral -->
+    <!-- 1.1.0 - Added extra options, fixed bugs -->
+    <!-- 1.1.1 - Reply chain commands -->
+    
+    <properties>
+        <maven.compiler.source>16</maven.compiler.source>
+        <maven.compiler.target>16</maven.compiler.target>
+    </properties>
+    
+    <dependencies>
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>JDA</artifactId>
+            <version>5.0.0-alpha.3</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>
