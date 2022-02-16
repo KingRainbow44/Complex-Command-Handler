@@ -3,14 +3,17 @@ package tech.xigam.cch.command;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.utils.Argument;
 import tech.xigam.cch.utils.Interaction;
 import tech.xigam.cch.utils.InteractiveArguments;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public abstract class Command implements BaseCommand
 {
@@ -78,13 +81,13 @@ public abstract class Command implements BaseCommand
     }
 
     @Override
-    public void prepareForExecution(SlashCommandEvent event, ComplexCommandHandler handler) {
+    public void prepareForExecution(SlashCommandInteractionEvent event, ComplexCommandHandler handler) {
         String subCommand = null;
         if (this instanceof Baseless) {
             subCommand = event.getSubcommandName();
         } else {
             OptionMapping option = event.getOption("action");
-            if(option != null) {
+            if (option != null) {
                 subCommand = option.getAsString();
             }
         }

@@ -6,7 +6,7 @@
 
     <groupId>tech.xigam</groupId>
     <artifactId>CCH</artifactId>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
 
     <!-- CHANGE LOG -->
     <!-- 1.0.2 - Added implementation of deleting commands -->
@@ -14,10 +14,11 @@
     <!-- 1.0.4 - Added DM ephemeral -->
     <!-- 1.1.0 - Added extra options, fixed bugs -->
     <!-- 1.1.1 - Reply chain commands -->
+    <!-- 1.2.0 - Update for JDA v5-alpha.5 -->
 
     <properties>
-        <maven.compiler.source>16</maven.compiler.source>
-        <maven.compiler.target>16</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <licenses>
@@ -116,7 +117,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-alpha.3</version>
+            <version>5.0.0-alpha.5</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

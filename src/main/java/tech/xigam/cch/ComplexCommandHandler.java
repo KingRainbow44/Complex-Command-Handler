@@ -6,13 +6,14 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
 import org.jetbrains.annotations.NotNull;
@@ -72,8 +73,8 @@ public final class ComplexCommandHandler extends ListenerAdapter
         executeCommand(command, event.getMessage(), event.getMember(), event.getTextChannel());
     }
 
-    private void runCommand(SlashCommandEvent event) {
-        if(!commands.containsKey(event.getName())) {
+    private void runCommand(SlashCommandInteractionEvent event) {
+        if (!commands.containsKey(event.getName())) {
             event.reply("Command not found.")
                     .queue();
             return;
@@ -170,10 +171,10 @@ public final class ComplexCommandHandler extends ListenerAdapter
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         this.runCommand(event);
     }
-    
+
     /*
      * Deploy method.
      */
@@ -193,21 +194,19 @@ public final class ComplexCommandHandler extends ListenerAdapter
     }
     
     public void deployAll(@Nullable Guild guild) {
-        Collection<CommandData> commands = new ArrayList<>();
+        Collection<SlashCommandData> commands = new ArrayList<>();
         this.commands.forEach((label, command) -> {
-            CommandData action = new CommandData(
-                    label, command.getDescription()
-            );
+            SlashCommandData action = Commands.slash(label, command.getDescription());
 
-            for(SubCommand subCommand : ((Command) command).getSubCommands().values()) {
+            for (SubCommand subCommand : ((Command) command).getSubCommands().values()) {
                 if (command instanceof Baseless) {
                     SubcommandData cmdData = new SubcommandData(subCommand.getLabel(), subCommand.getDescription());
-                    if(subCommand instanceof Arguments) {
-                        for(Argument argument : ((Arguments) subCommand).getArguments()) {
+                    if (subCommand instanceof Arguments) {
+                        for (Argument argument : ((Arguments) subCommand).getArguments()) {
                             OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                            if(argument.choices != null && argument.argumentType == OptionType.STRING)
+                            if (argument.choices != null && argument.argumentType == OptionType.STRING)
                                 argumentData.addChoices(Argument.toChoices(argument));
-                            else if(argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
+                            else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
                                 argumentData.setRequiredRange(argument.min, argument.max);
                             cmdData = cmdData.addOptions(argumentData);
                         }

@@ -1,12 +1,11 @@
 package tech.xigam.cch.utils;
 
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import tech.xigam.cch.command.Arguments;
 import tech.xigam.cch.command.BaseCommand;
-import tech.xigam.cch.command.Baseless;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -26,8 +25,8 @@ public final class Interaction implements Cloneable
     private final Message message;
     private final MessageChannel channel;
     private final Guild guild;
-    
-    private SlashCommandEvent slashExecutor = null;
+
+    private SlashCommandInteractionEvent slashExecutor = null;
     
     /*
      * Information storage.
@@ -37,17 +36,18 @@ public final class Interaction implements Cloneable
     
     private final Map<String, Object> arguments = new HashMap<>();
     private final List<String> rawArguments = new ArrayList<>();
-    
-    public Interaction(SlashCommandEvent event, BaseCommand command) {
-        this.isSlash = true; this.slashExecutor = event;
+
+    public Interaction(SlashCommandInteractionEvent event, BaseCommand command) {
+        this.isSlash = true;
+        this.slashExecutor = event;
         this.command = command;
-        
+
         this.member = event.getMember();
         this.message = null;
         this.channel = event.getChannel();
         this.guild = event.getGuild();
-        
-        if(command instanceof Arguments) {
+
+        if (command instanceof Arguments) {
             Map<String, OptionType> argumentTypes = Argument.toOptions(
                     ((Arguments) command).getArguments().toArray(new Argument[0])
             );
@@ -132,9 +132,9 @@ public final class Interaction implements Cloneable
     public Message getMessage() {
         return this.message;
     }
-    
+
     @Nullable
-    public SlashCommandEvent getSlashExecutor() {
+    public SlashCommandInteractionEvent getSlashExecutor() {
         return this.slashExecutor;
     }
     
