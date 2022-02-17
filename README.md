@@ -3,6 +3,7 @@ A really useful and simple command handler for JDA.
 
 # Usage
 To begin, add the Sonatype repository to your Maven configuration.
+(this is only required if you want the latest version as it releases)
 ```xml
 <repository>
   <id>sonatype</id>
