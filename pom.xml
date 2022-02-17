@@ -8,6 +8,10 @@
     <artifactId>CCH</artifactId>
     <version>1.2.0</version>
 
+    <name>Complex Command Handler</name>
+    <description>A really useful and simple command handler for JDA.</description>
+    <url>https://github.com/KingRainbow44/Complex-Command-Handler/</url>
+
     <!-- CHANGE LOG -->
     <!-- 1.0.2 - Added implementation of deleting commands -->
     <!-- 1.0.3 - Fix an issue with option string arguments -->
