@@ -34,7 +34,7 @@ public final class Argument
     ) {
         return new Argument(label, description, reference, type, required, positionInArguments);
     }
-    
+
     public static Argument createWithChoices(
             String label, String description,
             String reference, OptionType type, boolean required,
@@ -44,14 +44,25 @@ public final class Argument
         argument.choices = choices;
         return argument;
     }
-        
+
+    public static Argument createTrailingArgument(
+            String label, String description,
+            String reference, OptionType type, boolean required,
+            int positionInArguments
+    ) {
+        Argument argument = create(label, description, reference, type, required, positionInArguments);
+        argument.trailing = true;
+        return argument;
+    }
+
     public static Map<String, OptionType> toOptions(Argument... arguments) {
         Map<String, OptionType> options = new java.util.HashMap<>();
         for (Argument argument : arguments) {
             options.put(argument.reference, argument.argumentType);
-        } return options;
+        }
+        return options;
     }
-    
+
     public static Command.Choice[] toChoices(Argument argument) {
         Command.Choice[] commandChoices = new Command.Choice[argument.choices.length];
         for (int i = 0; i < argument.choices.length; i++) {
@@ -74,4 +85,5 @@ public final class Argument
     
     public String[] choices = null;
     public int min = -1, max = -1;
+    public boolean trailing = false;
 }

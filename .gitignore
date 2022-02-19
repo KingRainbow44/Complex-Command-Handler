@@ -4,3 +4,6 @@
 # Builds
 out/
 target/
+
+# Testing
+src/test/
