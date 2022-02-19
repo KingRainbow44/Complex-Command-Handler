@@ -84,8 +84,16 @@ public final class Interaction implements Cloneable
             Argument[] args = ((Arguments) command).getArguments().toArray(new Argument[0]);
             
             try {
-                for(Argument argument : args) {
-                    switch(argument.argumentType) {
+                for (int i = 0; i < arguments.size(); i++) {
+                    Argument argument = args[i];
+                    if (argument.trailing) {
+                        String combined = String.join(" ", arguments.subList(i, arguments.size()));
+                        this.arguments.put(argument.reference, combined);
+                        this.rawArguments.add(combined);
+                        break;
+                    }
+
+                    switch (argument.argumentType) {
                         default -> this.arguments.put(argument.reference, arguments.get(argument.position));
 
                         case INTEGER -> this.arguments.put(argument.reference, Long.parseLong(arguments.get(argument.position)));
