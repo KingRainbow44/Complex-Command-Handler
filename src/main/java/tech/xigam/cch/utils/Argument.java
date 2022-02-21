@@ -67,23 +67,39 @@ public final class Argument
         Command.Choice[] commandChoices = new Command.Choice[argument.choices.length];
         for (int i = 0; i < argument.choices.length; i++) {
             commandChoices[i] = new Command.Choice(argument.choices[i], argument.choices[i]);
-        } return commandChoices;
+        }
+        return commandChoices;
     }
-    
-    public String label = null;
-    public String description = null;
 
-    public String reference = null;
-    public OptionType argumentType = null;
-    public boolean required = false;
-    
-    public int position = -1;
-    
+    /*
+     * Setter methods.
+     */
+
+    public Argument trailing(boolean isTrailing) {
+        this.trailing = isTrailing;
+        return this;
+    }
+
+    public Argument completable(boolean isCompletable) {
+        this.completable = isCompletable;
+        return this;
+    }
+
+    public String label;
+    public String description;
+
+    public String reference;
+    public OptionType argumentType;
+    public boolean required;
+
+    public int position;
+
     /*
      * Extra arguments.
      */
-    
+
     public String[] choices = null;
     public int min = -1, max = -1;
     public boolean trailing = false;
+    public boolean completable = false;
 }

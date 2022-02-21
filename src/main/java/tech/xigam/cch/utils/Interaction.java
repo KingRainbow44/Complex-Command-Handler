@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.command.Arguments;
 import tech.xigam.cch.command.BaseCommand;
 
@@ -20,6 +21,7 @@ public final class Interaction implements Cloneable
      */
     private final boolean isSlash;
     private final BaseCommand command;
+    private final ComplexCommandHandler commandHandler;
     
     private final Member member;
     private final Message message;
@@ -27,17 +29,18 @@ public final class Interaction implements Cloneable
     private final Guild guild;
 
     private SlashCommandInteractionEvent slashExecutor = null;
-    
+
     /*
      * Information storage.
      */
     private boolean ephemeral = false, sendToDMs = false;
     private boolean deferred = false;
-    
+
     private final Map<String, Object> arguments = new HashMap<>();
     private final List<String> rawArguments = new ArrayList<>();
 
-    public Interaction(SlashCommandInteractionEvent event, BaseCommand command) {
+    public Interaction(ComplexCommandHandler commandHandler, SlashCommandInteractionEvent event, BaseCommand command) {
+        this.commandHandler = commandHandler;
         this.isSlash = true;
         this.slashExecutor = event;
         this.command = command;
@@ -70,9 +73,11 @@ public final class Interaction implements Cloneable
     }
     
     public Interaction(
-            Message message, TextChannel channel, 
+            ComplexCommandHandler commandHandler,
+            Message message, TextChannel channel,
             List<String> arguments, BaseCommand command
     ) {
+        this.commandHandler = commandHandler;
         this.isSlash = false; this.command = command;
         
         this.member = message.getMember();
@@ -100,18 +105,24 @@ public final class Interaction implements Cloneable
                         case BOOLEAN -> this.arguments.put(argument.reference, Boolean.parseBoolean(arguments.get(argument.position)));
                     }
                 }
-            } catch (IndexOutOfBoundsException ignored) { }
-        } this.rawArguments.addAll(arguments);
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        }
+        this.rawArguments.addAll(arguments);
     }
-    
+
     /*
      * Data methods.
      */
-    
+
+    public ComplexCommandHandler getCommandHandler() {
+        return this.commandHandler;
+    }
+
     public Map<String, Object> getArguments() {
         return this.arguments; // Returns a list of STRING-MAPPED arguments.
     }
-    
+
     public <T> T getArgument(String reference, Class<T> type) {
         return type.cast(this.arguments.get(reference));
     }
@@ -208,9 +219,7 @@ public final class Interaction implements Cloneable
             }
         } else {
             if(isEphemeral() && sendToDMs) {
-                getMember().getUser().openPrivateChannel().queue(privateChannel -> {
-                    privateChannel.sendMessage(message).queue();
-                });
+                getMember().getUser().openPrivateChannel().queue(privateChannel -> privateChannel.sendMessage(message).queue());
             } else {
                 getMessage().reply(message)
                         .mentionRepliedUser(mentionUser).queue();
@@ -229,9 +238,7 @@ public final class Interaction implements Cloneable
             }
         } else {
             if(isEphemeral() && sendToDMs) {
-                getMember().getUser().openPrivateChannel().queue(privateChannel -> {
-                    privateChannel.sendMessageEmbeds(message).queue();
-                });
+                getMember().getUser().openPrivateChannel().queue(privateChannel -> privateChannel.sendMessageEmbeds(message).queue());
             } else {
                 getMessage().replyEmbeds(message)
                         .mentionRepliedUser(mentionUser).queue();

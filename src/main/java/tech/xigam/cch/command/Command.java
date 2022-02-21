@@ -3,10 +3,12 @@ package tech.xigam.cch.command;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.utils.Argument;
+import tech.xigam.cch.utils.Completion;
 import tech.xigam.cch.utils.Interaction;
 import tech.xigam.cch.utils.InteractiveArguments;
 
@@ -65,13 +67,13 @@ public abstract class Command implements BaseCommand
                 
                 if(args.size() < requiredArguments) {
                     handler.onArgumentError.accept(
-                            new Interaction(message, channel, arguments, this)
+                            new Interaction(handler, message, channel, arguments, this)
                     ); return;
                 }
             }
             
             if (interactiveArguments.size() == 0 || skipArguments) {
-                execute(new Interaction(message, channel, arguments, this));
+                execute(new Interaction(handler, message, channel, arguments, this));
             } else {
                 new InteractiveArguments(
                         message, sender, this, interactiveArguments, handler
@@ -91,15 +93,41 @@ public abstract class Command implements BaseCommand
                 subCommand = option.getAsString();
             }
         }
-        
-        if(subCommand != null) {
-            if(subCommands.containsKey(subCommand)) {
+
+        if (subCommand != null) {
+            if (subCommands.containsKey(subCommand)) {
                 getSubCommand(subCommand)
-                        .execute(new Interaction(event, getSubCommand(subCommand))); return;
+                        .execute(new Interaction(handler, event, getSubCommand(subCommand)));
+                return;
             }
         }
-        
-        execute(new Interaction(event, this));
+
+        execute(new Interaction(handler, event, this));
+    }
+
+    @Override
+    public void prepareForCompletion(CommandAutoCompleteInteractionEvent event, ComplexCommandHandler handler) {
+        String subCommand = null;
+        if (this instanceof Baseless) {
+            subCommand = event.getSubcommandName();
+        } else {
+            OptionMapping option = event.getOption("action");
+            if (option != null) {
+                subCommand = option.getAsString();
+            }
+        }
+
+        if (subCommand != null) {
+            if (subCommands.containsKey(subCommand)) {
+                var subCmd = getSubCommand(subCommand);
+                if (subCmd instanceof Completable)
+                    ((Completable) subCmd).complete(new Completion(event));
+                return;
+            }
+        }
+
+        if (this instanceof Completable)
+            ((Completable) this).complete(new Completion(event));
     }
 
     public final Map<String, SubCommand> getSubCommands() {
@@ -109,7 +137,7 @@ public abstract class Command implements BaseCommand
     protected final void registerSubCommand(SubCommand subCommand) {
         subCommands.put(subCommand.getLabel(), subCommand);
     }
-    
+
     private SubCommand getSubCommand(String label) {
         return subCommands.get(label);
     }

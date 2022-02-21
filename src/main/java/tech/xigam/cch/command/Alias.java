@@ -3,6 +3,7 @@ package tech.xigam.cch.command;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.utils.Interaction;
@@ -34,5 +35,10 @@ public record Alias(String label, Command aliasOf) implements BaseCommand
     @Override
     public void prepareForExecution(List<String> arguments, Message message, Member sender, TextChannel channel, boolean skipArguments, ComplexCommandHandler handler) {
         aliasOf.prepareForExecution(arguments, message, sender, channel, skipArguments, handler);
+    }
+
+    @Override
+    public void prepareForCompletion(CommandAutoCompleteInteractionEvent event, ComplexCommandHandler handler) {
+        aliasOf.prepareForCompletion(event, handler);
     }
 }

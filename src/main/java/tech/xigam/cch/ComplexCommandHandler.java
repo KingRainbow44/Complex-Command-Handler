@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
@@ -85,15 +86,15 @@ public final class ComplexCommandHandler extends ListenerAdapter
     }
 
     private void executeCommand(String command, Message message2, Member member, TextChannel textChannel) {
-        if(!commands.containsKey(command))
+        if (!commands.containsKey(command))
             return;
 
         String message = message2.getContentRaw();
         String[] splitMessage = message.split(" ");
 
         List<String> arguments = new ArrayList<>();
-        for(String argument : splitMessage)
-            if(!argument.startsWith(this.prefix))
+        for (String argument : splitMessage)
+            if (!argument.startsWith(this.prefix))
                 arguments.add(argument);
         commands.get(command).prepareForExecution(
                 arguments, message2,
@@ -101,20 +102,27 @@ public final class ComplexCommandHandler extends ListenerAdapter
                 false, this
         );
     }
-    
+
+    /*
+     * Completing commands.
+     */
+
+
+
     /*
      * Handling interactive arguments.
      */
-    
+
     public void checkMessageInteraction(Message message) {
-        if(message.getMember() == null) return;
-        
-        String memberId = message.getMember().getId(); String channelId = message.getChannel().getId();
-        if(!argumentSessions.containsKey(memberId)) return;
-        if(!channelId.matches(
+        if (message.getMember() == null) return;
+
+        String memberId = message.getMember().getId();
+        String channelId = message.getChannel().getId();
+        if (!argumentSessions.containsKey(memberId)) return;
+        if (!channelId.matches(
                 argumentSessions.get(memberId).getChannel().getId()
         )) return;
-        
+
         argumentSessions.get(memberId)
                 .advance(message);
     }
@@ -175,16 +183,21 @@ public final class ComplexCommandHandler extends ListenerAdapter
         this.runCommand(event);
     }
 
-    /*
-     * Deploy method.
-     */
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
+        if (!commands.containsKey(event.getName()))
+            return;
+
+        var command = commands.get(event.getName());
+        command.prepareForCompletion(event, this);
+    }
 
     /**
      * Delete and create commands.
      */
-    
+
     public void downsert(@Nullable Guild guild) {
-        if(guild == null) {
+        if (guild == null) {
             jdaInstance.updateCommands()
                     .addCommands().queue();
         } else {
@@ -208,6 +221,8 @@ public final class ComplexCommandHandler extends ListenerAdapter
                                 argumentData.addChoices(Argument.toChoices(argument));
                             else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
                                 argumentData.setRequiredRange(argument.min, argument.max);
+                            if (argument.completable)
+                                argumentData.setAutoComplete(true);
                             cmdData = cmdData.addOptions(argumentData);
                         }
                     }
@@ -219,10 +234,12 @@ public final class ComplexCommandHandler extends ListenerAdapter
                     if(subCommand instanceof Arguments) {
                         for(Argument argument : ((Arguments) subCommand).getArguments()) {
                             OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                            if(argument.choices != null && argument.argumentType == OptionType.STRING)
+                            if (argument.choices != null && argument.argumentType == OptionType.STRING)
                                 argumentData.addChoices(Argument.toChoices(argument));
-                            else if(argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
+                            else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
                                 argumentData.setRequiredRange(argument.min, argument.max);
+                            if (argument.completable)
+                                argumentData.setAutoComplete(true);
                             action = action.addOptions(argumentData);
                         }
                     }
@@ -239,10 +256,12 @@ public final class ComplexCommandHandler extends ListenerAdapter
                     if(subCommand instanceof Arguments) {
                         for(Argument argument : ((Arguments) subCommand).getArguments()) {
                             OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                            if(argument.choices != null && argument.argumentType == OptionType.STRING)
+                            if (argument.choices != null && argument.argumentType == OptionType.STRING)
                                 argumentData.addChoices(Argument.toChoices(argument));
-                            else if(argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
+                            else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
                                 argumentData.setRequiredRange(argument.min, argument.max);
+                            if (argument.completable)
+                                argumentData.setAutoComplete(true);
                             subAction = subAction.addOptions(argumentData);
                         }
                     }
@@ -252,10 +271,12 @@ public final class ComplexCommandHandler extends ListenerAdapter
             if(command instanceof Arguments) {
                 for(Argument argument : ((Arguments) command).getArguments()) {
                     OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                    if(argument.choices != null && argument.argumentType == OptionType.STRING)
+                    if (argument.choices != null && argument.argumentType == OptionType.STRING)
                         argumentData.addChoices(Argument.toChoices(argument));
-                    else if(argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
+                    else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
                         argumentData.setRequiredRange(argument.min, argument.max);
+                    if (argument.completable)
+                        argumentData.setAutoComplete(true);
                     action = action.addOptions(argumentData);
                 }
             }
@@ -295,8 +316,10 @@ public final class ComplexCommandHandler extends ListenerAdapter
                     if(subCommand instanceof Arguments) {
                         for(Argument argument : ((Arguments) subCommand).getArguments()) {
                             OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                            if(argument.choices != null && argument.argumentType == OptionType.STRING)
+                            if (argument.choices != null && argument.argumentType == OptionType.STRING)
                                 argumentData.addChoices(Argument.toChoices(argument));
+                            if (argument.completable)
+                                argumentData.setAutoComplete(true);
                             cmdData = cmdData.addOptions(argumentData);
                         }
                     }
@@ -308,8 +331,10 @@ public final class ComplexCommandHandler extends ListenerAdapter
                     if(subCommand instanceof Arguments) {
                         for(Argument argument : ((Arguments) subCommand).getArguments()) {
                             OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                            if(argument.choices != null && argument.argumentType == OptionType.STRING)
+                            if (argument.choices != null && argument.argumentType == OptionType.STRING)
                                 argumentData.addChoices(Argument.toChoices(argument));
+                            if (argument.completable)
+                                argumentData.setAutoComplete(true);
                             action = action.addOptions(argumentData);
                         }
                     }
@@ -326,8 +351,10 @@ public final class ComplexCommandHandler extends ListenerAdapter
                     if(subCommand instanceof Arguments) {
                         for(Argument argument : ((Arguments) subCommand).getArguments()) {
                             OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                            if(argument.choices != null && argument.argumentType == OptionType.STRING)
+                            if (argument.choices != null && argument.argumentType == OptionType.STRING)
                                 argumentData.addChoices(Argument.toChoices(argument));
+                            if (argument.completable)
+                                argumentData.setAutoComplete(true);
                             subAction = subAction.addOptions(argumentData);
                         }
                     }
@@ -337,8 +364,10 @@ public final class ComplexCommandHandler extends ListenerAdapter
             if(command instanceof Arguments) {
                 for(Argument argument : ((Arguments) command).getArguments()) {
                     OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                    if(argument.choices != null && argument.argumentType == OptionType.STRING)
+                    if (argument.choices != null && argument.argumentType == OptionType.STRING)
                         argumentData.addChoices(Argument.toChoices(argument));
+                    if (argument.completable)
+                        argumentData.setAutoComplete(true);
                     action = action.addOptions(argumentData);
                 }
             }
