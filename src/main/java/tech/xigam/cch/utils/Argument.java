@@ -45,6 +45,16 @@ public final class Argument
         return argument;
     }
 
+    public static Argument createWithChoices(
+            String label, String description,
+            String reference, OptionType type, boolean required,
+            int positionInArguments, String[] choices
+    ) {
+        Argument argument = create(label, description, reference, type, required, positionInArguments);
+        argument.choices = choices;
+        return argument;
+    }
+
     public static Argument createTrailingArgument(
             String label, String description,
             String reference, OptionType type, boolean required,
