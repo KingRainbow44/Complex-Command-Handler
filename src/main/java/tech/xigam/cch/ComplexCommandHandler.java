@@ -141,8 +141,6 @@ public final class ComplexCommandHandler extends ListenerAdapter
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if(!this.usePrefix) return;
 
-        if(!event.getChannelType().isGuild())
-            return;
         if(event.getAuthor().isBot())
             return;
         
@@ -162,8 +160,6 @@ public final class ComplexCommandHandler extends ListenerAdapter
     public void onMessageUpdate(@NotNull MessageUpdateEvent event) {
         if(!usePrefix) return;
 
-        if(!event.getChannelType().isGuild())
-            return;
         if(event.getAuthor().isBot())
             return;
 
