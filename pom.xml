@@ -7,7 +7,7 @@
 
     <groupId>tech.xigam</groupId>
     <artifactId>CCH</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
 
     <name>Complex Command Handler</name>
     <description>A really useful and simple command handler for JDA.</description>
@@ -21,6 +21,7 @@
     <!-- 1.1.1 - Reply chain commands -->
     <!-- 1.2.0 - Update for JDA v5-alpha.5 -->
     <!-- 1.3.0 - Trailing prefix-based arguments. -->
+    <!-- 1.4.0 - Auto-completable commands. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
