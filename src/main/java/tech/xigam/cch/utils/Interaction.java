@@ -13,16 +13,15 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public final class Interaction implements Cloneable
-{
+public final class Interaction implements Cloneable {
     /*
      * Global data.
      * Set regardless of position.
      */
-    private final boolean isSlash;
+    private final boolean isSlash, inGuild;
     private final BaseCommand command;
     private final ComplexCommandHandler commandHandler;
-    
+
     private final Member member;
     private final Message message;
     private final MessageChannel channel;
@@ -42,6 +41,7 @@ public final class Interaction implements Cloneable
     public Interaction(ComplexCommandHandler commandHandler, SlashCommandInteractionEvent event, BaseCommand command) {
         this.commandHandler = commandHandler;
         this.isSlash = true;
+        this.inGuild = event.isFromGuild();
         this.slashExecutor = event;
         this.command = command;
 
@@ -78,7 +78,9 @@ public final class Interaction implements Cloneable
             List<String> arguments, BaseCommand command
     ) {
         this.commandHandler = commandHandler;
-        this.isSlash = false; this.command = command;
+        this.isSlash = false;
+        this.command = command;
+        this.inGuild = message.isFromGuild();
         
         this.member = message.getMember();
         this.message = message;
@@ -160,22 +162,26 @@ public final class Interaction implements Cloneable
     public boolean isSlash() {
         return this.isSlash;
     }
-    
+
     public boolean isDeferred() {
         return this.deferred;
     }
-    
+
     public boolean isEphemeral() {
         return this.ephemeral;
     }
-    
+
+    public boolean isFromGuild() {
+        return this.inGuild;
+    }
+
     /*
      * Utility methods.
      * Used to make the replying process easier.
      */
-    
+
     public void deferReply() {
-        if(this.isSlash)
+        if (this.isSlash)
             this.slashExecutor.deferReply(ephemeral).queue();
         else this.getChannel().sendTyping().queue();
         

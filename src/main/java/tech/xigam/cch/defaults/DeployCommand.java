@@ -26,6 +26,11 @@ public abstract class DeployCommand extends Command implements Arguments {
         var global = interaction.getArgument("global", false, Boolean.class);
         var delete = interaction.getArgument("delete", false, Boolean.class);
 
+        if (!global && !interaction.isFromGuild()) {
+            global = true;
+            interaction.sendMessage("You can't deploy slash commands to a DM, deploying globally instead.");
+        }
+
         if (delete) {
             interaction.getCommandHandler().downsert(global ? null : interaction.getGuild());
             interaction.reply("Deleted all commands.");
