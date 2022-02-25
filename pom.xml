@@ -6,8 +6,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>tech.xigam</groupId>
-    <artifactId>CCH</artifactId>
-    <version>1.4.1</version>
+    <artifactId>CCH</artifactId>=
+    <version>1.4.1</version>=
 
     <name>Complex Command Handler</name>
     <description>A really useful and simple command handler for JDA.</description>
