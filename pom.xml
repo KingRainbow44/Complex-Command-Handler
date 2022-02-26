@@ -6,8 +6,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>tech.xigam</groupId>
-    <artifactId>CCH</artifactId>=
-    <version>1.4.1</version>=
+    <artifactId>CCH</artifactId>
+    <version>1.4.2</version>
 
     <name>Complex Command Handler</name>
     <description>A really useful and simple command handler for JDA.</description>
@@ -23,6 +23,7 @@
     <!-- 1.3.0 - Trailing prefix-based arguments. -->
     <!-- 1.4.0 - Auto-completable arguments. -->
     <!-- 1.4.1 - Added command-in-guild check. -->
+    <!-- 1.4.2 - Added array options to arguments. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
