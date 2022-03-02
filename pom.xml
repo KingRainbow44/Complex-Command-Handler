@@ -23,6 +23,7 @@
     <!-- 1.3.0 - Trailing prefix-based arguments. -->
     <!-- 1.4.0 - Auto-completable arguments. -->
     <!-- 1.4.1 - Added command-in-guild check. -->
+    <!-- 1.4.2 - Add support for other option types. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

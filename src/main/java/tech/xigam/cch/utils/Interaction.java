@@ -103,8 +103,11 @@ public final class Interaction implements Cloneable {
                     switch (argument.argumentType) {
                         default -> this.arguments.put(argument.reference, arguments.get(argument.position));
 
-                        case INTEGER -> this.arguments.put(argument.reference, Long.parseLong(arguments.get(argument.position)));
+                        case INTEGER, NUMBER -> this.arguments.put(argument.reference, Long.parseLong(arguments.get(argument.position)));
                         case BOOLEAN -> this.arguments.put(argument.reference, Boolean.parseBoolean(arguments.get(argument.position)));
+                        case MENTIONABLE, USER -> this.arguments.put(argument.reference, guild.getMemberById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
+                        case ROLE -> this.arguments.put(argument.reference, guild.getRoleById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
+                        case CHANNEL -> this.arguments.put(argument.reference, guild.getTextChannelById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
                     }
                 }
             } catch (IndexOutOfBoundsException ignored) {
