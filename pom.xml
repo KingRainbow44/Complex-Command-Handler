@@ -7,7 +7,7 @@
 
     <groupId>tech.xigam</groupId>
     <artifactId>CCH</artifactId>
-    <version>1.4.2</version>
+    <version>1.4.3</version>
 
     <name>Complex Command Handler</name>
     <description>A really useful and simple command handler for JDA.</description>
@@ -24,6 +24,7 @@
     <!-- 1.4.0 - Auto-completable arguments. -->
     <!-- 1.4.1 - Added command-in-guild check. -->
     <!-- 1.4.2 - Add support for other option types. -->
+    <!-- 1.4.3 - Add support for all channel types. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

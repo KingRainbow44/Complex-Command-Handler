@@ -66,7 +66,7 @@ public final class Interaction implements Cloneable {
                     case MENTIONABLE -> this.arguments.put(entry.getKey(), mapping.getAsMentionable());
                     case USER -> this.arguments.put(entry.getKey(), mapping.getAsUser());
                     case ROLE -> this.arguments.put(entry.getKey(), mapping.getAsRole());
-                    case CHANNEL -> this.arguments.put(entry.getKey(), mapping.getAsMessageChannel());
+                    case CHANNEL -> this.arguments.put(entry.getKey(), mapping.getAsGuildChannel());
                 }
             }
         }
@@ -107,7 +107,7 @@ public final class Interaction implements Cloneable {
                         case BOOLEAN -> this.arguments.put(argument.reference, Boolean.parseBoolean(arguments.get(argument.position)));
                         case MENTIONABLE, USER -> this.arguments.put(argument.reference, guild.getMemberById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
                         case ROLE -> this.arguments.put(argument.reference, guild.getRoleById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
-                        case CHANNEL -> this.arguments.put(argument.reference, guild.getTextChannelById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
+                        case CHANNEL -> this.arguments.put(argument.reference, guild.getGuildChannelById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
                     }
                 }
             } catch (IndexOutOfBoundsException ignored) {
