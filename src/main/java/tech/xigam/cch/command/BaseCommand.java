@@ -40,8 +40,6 @@ public interface BaseCommand {
 
     void prepareForCompletion(CommandAutoCompleteInteractionEvent event, ComplexCommandHandler handler);
 
-//    void prepareForCallback(MessageReactionAddEvent event, ComplexCommandHandler handler);
-
     void prepareForCallback(String cmdLabel, ButtonInteractionEvent event, ComplexCommandHandler handler);
 
     /**

@@ -1,22 +1,21 @@
 package tech.xigam.cch.utils;
 
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 
 /**
  * A callback for buttons and forms.
  */
 public final class Callback {
-    private final boolean isSlash, inGuild;
     private final String reference;
 
-    private GenericComponentInteractionCreateEvent interactionExecutor = null;
+    private final GenericComponentInteractionCreateEvent interactionExecutor;
 
-    private boolean deferred = false;
+    private Type deferred = Type.NONE;
 
     public Callback(ButtonInteractionEvent event) {
-        this.isSlash = true;
-        this.inGuild = event.isFromGuild();
         this.interactionExecutor = event;
 
         var rawReference = event.getComponentId();
@@ -30,15 +29,81 @@ public final class Callback {
     // ---------- UTILITY METHODS ---------- \\
 
     public Callback deferEdit() {
-        if (this.isSlash)
-            this.interactionExecutor.deferEdit().queue();
-        this.deferred = true;
+        this.interactionExecutor.deferEdit().queue();
+        this.deferred = Type.EDIT;
+        return this;
+    }
+
+    public Callback deferReply() {
+        this.interactionExecutor.deferReply().queue();
+        this.deferred = Type.REPLY;
         return this;
     }
 
     // ---------- REPLY METHODS ---------- \\
 
+    public void edit(String message) {
+        this.send(message, Type.EDIT);
+    }
+
     public void reply(String message) {
-        
+        this.send(message, Type.REPLY);
+    }
+
+    public void edit(MessageEmbed embed) {
+        this.send(embed, Type.EDIT);
+    }
+
+    public void reply(MessageEmbed embed) {
+        this.send(embed, Type.REPLY);
+    }
+
+    /**
+     * Internal message sending/updating method.
+     *
+     * @param message The message to send.
+     */
+    private void send(Object message, Type type) {
+        switch (this.deferred) {
+            case EDIT -> {
+                var hook = this.interactionExecutor.getHook();
+                if (message instanceof String) {
+                    hook.editOriginal((String) message).queue();
+                } else if (message instanceof MessageEmbed) {
+                    hook.editOriginalEmbeds((MessageEmbed) message).queue();
+                } else if (message instanceof ActionRow) {
+                    hook.editOriginalComponents((ActionRow) message).queue();
+                }
+            }
+
+            case REPLY -> {
+                var hook = this.interactionExecutor.getHook();
+                if (message instanceof String) {
+                    hook.sendMessage((String) message).queue();
+                } else if (message instanceof MessageEmbed) {
+                    hook.sendMessageEmbeds((MessageEmbed) message).queue();
+                }
+            }
+
+            case NONE -> {
+                if (type == Type.EDIT) {
+                    if (message instanceof String) {
+                        this.interactionExecutor.editMessage((String) message).queue();
+                    } else if (message instanceof MessageEmbed) {
+                        this.interactionExecutor.editMessageEmbeds((MessageEmbed) message).queue();
+                    }
+                } else {
+                    if (message instanceof String) {
+                        this.interactionExecutor.reply((String) message).queue();
+                    } else if (message instanceof MessageEmbed) {
+                        this.interactionExecutor.replyEmbeds((MessageEmbed) message).queue();
+                    }
+                }
+            }
+        }
+    }
+
+    private enum Type {
+        NONE, EDIT, REPLY
     }
 }

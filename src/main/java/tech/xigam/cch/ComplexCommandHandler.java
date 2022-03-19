@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -190,11 +189,6 @@ public final class ComplexCommandHandler extends ListenerAdapter
         var label = rawReference.split("<")[1].split(">")[0];
         var command = commands.get(label);
         command.prepareForCallback(label, event, this);
-    }
-
-    @Override
-    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        
     }
 
     /**

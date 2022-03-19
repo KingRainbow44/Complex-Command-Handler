@@ -5,6 +5,9 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.command.Arguments;
 import tech.xigam.cch.command.BaseCommand;
@@ -211,11 +214,11 @@ public final class Interaction {
         getChannel().sendMessageEmbeds(message).queue();
         return this;
     }
-    
+
     public void reply(String message) {
         this.reply(message, true);
     }
-    
+
     public void reply(MessageEmbed embed) {
         this.reply(embed, true);
     }
@@ -249,27 +252,45 @@ public final class Interaction {
     private void send(Object message, boolean mentionUser) {
         if (this.isSlash()) {
             if (this.isDeferred()) {
+                WebhookMessageAction<Message> send;
+
                 if (message instanceof String)
-                    this.slashExecutor.getHook().sendMessage((String) message).addActionRow(this.buttons).queue();
-                else
-                    this.slashExecutor.getHook().sendMessageEmbeds((MessageEmbed) message).addActionRow(this.buttons).queue();
+                    send = this.slashExecutor.getHook().sendMessage((String) message);
+                else send = this.slashExecutor.getHook().sendMessageEmbeds((MessageEmbed) message);
+
+                if (!this.buttons.isEmpty()) send = send.addActionRow(this.buttons);
+                send.queue();
             } else {
+                ReplyCallbackAction send;
+
                 if (message instanceof String)
-                    this.slashExecutor.reply((String) message).addActionRow(this.buttons).setEphemeral(this.isEphemeral()).queue();
+                    send = this.slashExecutor.reply((String) message);
                 else
-                    this.slashExecutor.replyEmbeds((MessageEmbed) message).addActionRow(this.buttons).setEphemeral(this.isEphemeral()).queue();
+                    send = this.slashExecutor.replyEmbeds((MessageEmbed) message);
+
+                if (!this.buttons.isEmpty()) send = send.addActionRow(this.buttons);
+                send.setEphemeral(this.isEphemeral()).queue();
             }
         } else {
             if (this.isEphemeral() && this.sendToDMs) {
                 this.getMember().getUser().openPrivateChannel().queue(privateChannel -> {
+                    MessageAction send;
+
                     if (message instanceof String)
-                        privateChannel.sendMessage((String) message).queue();
-                    else privateChannel.sendMessageEmbeds((MessageEmbed) message).queue();
+                        send = privateChannel.sendMessage((String) message);
+                    else send = privateChannel.sendMessageEmbeds((MessageEmbed) message);
+
+                    if (!this.buttons.isEmpty()) send = send.setActionRow(this.buttons);
+                    send.queue();
                 });
             } else {
+                MessageAction send;
                 if (message instanceof String)
-                    this.getMessage().reply((String) message).mentionRepliedUser(mentionUser).queue();
-                else this.getMessage().replyEmbeds((MessageEmbed) message).mentionRepliedUser(mentionUser).queue();
+                    send = this.getMessage().reply((String) message);
+                else send = this.getMessage().replyEmbeds((MessageEmbed) message);
+
+                if (!this.buttons.isEmpty()) send = send.setActionRow(this.buttons);
+                send.mentionRepliedUser(mentionUser).queue();
             }
         }
     }
