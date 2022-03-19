@@ -5,12 +5,10 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import tech.xigam.cch.ComplexCommandHandler;
-import tech.xigam.cch.utils.Argument;
-import tech.xigam.cch.utils.Completion;
-import tech.xigam.cch.utils.Interaction;
-import tech.xigam.cch.utils.InteractiveArguments;
+import tech.xigam.cch.utils.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -128,6 +126,19 @@ public abstract class Command implements BaseCommand
 
         if (this instanceof Completable)
             ((Completable) this).complete(new Completion(event));
+    }
+
+    @Override
+    public void prepareForCallback(String cmdLabel, ButtonInteractionEvent event, ComplexCommandHandler handler) {
+        if (subCommands.containsKey(cmdLabel)) {
+            var subCmd = this.getSubCommand(cmdLabel);
+            if (subCmd instanceof Callable)
+                ((Callable) subCmd).callback(new Callback(event));
+            return;
+        }
+
+        if (this instanceof Callable)
+            ((Callable) this).callback(new Callback(event));
     }
 
     public final Map<String, SubCommand> getSubCommands() {

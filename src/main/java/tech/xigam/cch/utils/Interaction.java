@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.command.Arguments;
 import tech.xigam.cch.command.BaseCommand;
@@ -13,13 +14,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public final class Interaction implements Cloneable {
-    /*
-     * Global data.
-     * Set regardless of position.
-     */
+public final class Interaction {
     private final boolean isSlash, inGuild;
-    private final BaseCommand command;
     private final ComplexCommandHandler commandHandler;
 
     private final Member member;
@@ -29,21 +25,19 @@ public final class Interaction implements Cloneable {
 
     private SlashCommandInteractionEvent slashExecutor = null;
 
-    /*
-     * Information storage.
-     */
     private boolean ephemeral = false, sendToDMs = false;
     private boolean deferred = false;
 
     private final Map<String, Object> arguments = new HashMap<>();
     private final List<String> rawArguments = new ArrayList<>();
 
+    private final List<Button> buttons = new ArrayList<>();
+
     public Interaction(ComplexCommandHandler commandHandler, SlashCommandInteractionEvent event, BaseCommand command) {
         this.commandHandler = commandHandler;
         this.isSlash = true;
         this.inGuild = event.isFromGuild();
         this.slashExecutor = event;
-        this.command = command;
 
         this.member = event.getMember();
         this.message = null;
@@ -67,6 +61,7 @@ public final class Interaction implements Cloneable {
                     case USER -> this.arguments.put(entry.getKey(), mapping.getAsUser());
                     case ROLE -> this.arguments.put(entry.getKey(), mapping.getAsRole());
                     case CHANNEL -> this.arguments.put(entry.getKey(), mapping.getAsGuildChannel());
+                    case ATTACHMENT -> this.arguments.put(entry.getKey(), mapping.getAsAttachment());
                 }
             }
         }
@@ -79,7 +74,6 @@ public final class Interaction implements Cloneable {
     ) {
         this.commandHandler = commandHandler;
         this.isSlash = false;
-        this.command = command;
         this.inGuild = message.isFromGuild();
         
         this.member = message.getMember();
@@ -91,7 +85,8 @@ public final class Interaction implements Cloneable {
             Argument[] args = ((Arguments) command).getArguments().toArray(new Argument[0]);
             
             try {
-                for (int i = 0; i < arguments.size(); i++) {
+                int attachmentCount = 0;
+                for (int i = 0; i < args.length; i++) {
                     Argument argument = args[i];
                     if (argument.trailing) {
                         String combined = String.join(" ", arguments.subList(i, arguments.size()));
@@ -108,6 +103,7 @@ public final class Interaction implements Cloneable {
                         case MENTIONABLE, USER -> this.arguments.put(argument.reference, guild.getMemberById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
                         case ROLE -> this.arguments.put(argument.reference, guild.getRoleById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
                         case CHANNEL -> this.arguments.put(argument.reference, guild.getGuildChannelById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
+                        case ATTACHMENT -> this.arguments.put(argument.reference, message.getAttachments().get(attachmentCount++));
                     }
                 }
             } catch (IndexOutOfBoundsException ignored) {
@@ -116,9 +112,7 @@ public final class Interaction implements Cloneable {
         this.rawArguments.addAll(arguments);
     }
 
-    /*
-     * Data methods.
-     */
+    // ---------- DATA METHODS ---------- \\
 
     public ComplexCommandHandler getCommandHandler() {
         return this.commandHandler;
@@ -178,10 +172,7 @@ public final class Interaction implements Cloneable {
         return this.inGuild;
     }
 
-    /*
-     * Utility methods.
-     * Used to make the replying process easier.
-     */
+    // ---------- UTILITY METHODS ---------- \\
 
     public void deferReply() {
         if (this.isSlash)
@@ -190,82 +181,96 @@ public final class Interaction implements Cloneable {
         
         this.deferred = true;
     }
-    
+
     public Interaction setEphemeral() {
-        this.ephemeral = true; return this;
+        this.ephemeral = true;
+        return this;
     }
-    
+
     public Interaction setEphemeral(boolean sendToDMs) {
-        this.ephemeral = true; this.sendToDMs = sendToDMs; return this;
+        this.ephemeral = true;
+        this.sendToDMs = sendToDMs;
+        return this;
     }
-    
+
+    // ---------- INTERACTABLE METHODS ---------- \\
+
+    public Interaction addButton(Button button) {
+        this.buttons.add(button);
+        return this;
+    }
+
     // ---------- REPLY METHODS ---------- \\
-    
+
     public Interaction sendMessage(String message) {
-        getChannel().sendMessage(message).queue(); return this;
+        getChannel().sendMessage(message).queue();
+        return this;
     }
 
     public Interaction sendMessage(MessageEmbed message) {
-        getChannel().sendMessageEmbeds(message).queue(); return this;
+        getChannel().sendMessageEmbeds(message).queue();
+        return this;
     }
     
     public void reply(String message) {
-        reply(message, true);
+        this.reply(message, true);
     }
     
     public void reply(MessageEmbed embed) {
-        reply(embed, true);
+        this.reply(embed, true);
     }
-    
+
     public void reply(String message, boolean mentionUser) {
-        if(isSlash()) {
-            if(isDeferred()) {
-                slashExecutor.getHook()
-                        .sendMessage(message).queue();
-            } else {
-                slashExecutor.reply(message)
-                        .setEphemeral(isEphemeral()).queue();
-            }
-        } else {
-            if(isEphemeral() && sendToDMs) {
-                getMember().getUser().openPrivateChannel().queue(privateChannel -> privateChannel.sendMessage(message).queue());
-            } else {
-                getMessage().reply(message)
-                        .mentionRepliedUser(mentionUser).queue();
-            }
-        }
+        this.send(message, mentionUser);
     }
 
     public void reply(MessageEmbed message, boolean mentionUser) {
-        if(isSlash()) {
-            if(isDeferred()) {
-                slashExecutor.getHook()
-                        .sendMessageEmbeds(message).queue();
-            } else {
-                slashExecutor.replyEmbeds(message)
-                        .setEphemeral(isEphemeral()).queue();
-            }
-        } else {
-            if(isEphemeral() && sendToDMs) {
-                getMember().getUser().openPrivateChannel().queue(privateChannel -> privateChannel.sendMessageEmbeds(message).queue());
-            } else {
-                getMessage().replyEmbeds(message)
-                        .mentionRepliedUser(mentionUser).queue();
-            }
-        }
+        this.send(message, mentionUser);
     }
 
     public void execute(Consumer<Interaction> consumer, long after, TimeUnit timeUnit) {
-        try {
-            Interaction messageClone = (Interaction) this.clone();
+        Interaction interaction = this;
+        Timer timer = new Timer();
 
-            Timer timer = new Timer();
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    consumer.accept(messageClone);
-                }
-            }, timeUnit.toMillis(after));
-        } catch (CloneNotSupportedException ignored) { }
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                consumer.accept(interaction);
+            }
+        }, timeUnit.toMillis(after));
+    }
+
+    /**
+     * Internal message sending method.
+     *
+     * @param message     The message to send.
+     * @param mentionUser Whether to mention the user.
+     */
+    private void send(Object message, boolean mentionUser) {
+        if (this.isSlash()) {
+            if (this.isDeferred()) {
+                if (message instanceof String)
+                    this.slashExecutor.getHook().sendMessage((String) message).addActionRow(this.buttons).queue();
+                else
+                    this.slashExecutor.getHook().sendMessageEmbeds((MessageEmbed) message).addActionRow(this.buttons).queue();
+            } else {
+                if (message instanceof String)
+                    this.slashExecutor.reply((String) message).addActionRow(this.buttons).setEphemeral(this.isEphemeral()).queue();
+                else
+                    this.slashExecutor.replyEmbeds((MessageEmbed) message).addActionRow(this.buttons).setEphemeral(this.isEphemeral()).queue();
+            }
+        } else {
+            if (this.isEphemeral() && this.sendToDMs) {
+                this.getMember().getUser().openPrivateChannel().queue(privateChannel -> {
+                    if (message instanceof String)
+                        privateChannel.sendMessage((String) message).queue();
+                    else privateChannel.sendMessageEmbeds((MessageEmbed) message).queue();
+                });
+            } else {
+                if (message instanceof String)
+                    this.getMessage().reply((String) message).mentionRepliedUser(mentionUser).queue();
+                else this.getMessage().replyEmbeds((MessageEmbed) message).mentionRepliedUser(mentionUser).queue();
+            }
+        }
     }
 }

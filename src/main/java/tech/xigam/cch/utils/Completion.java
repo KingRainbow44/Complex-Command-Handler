@@ -56,6 +56,9 @@ public final class Completion {
     }
 
     public void reply() {
-        this.completeEvent.replyChoices(this.choices).queue();
+        try {
+            this.completeEvent.replyChoices(this.choices).queue();
+        } catch (IllegalStateException ignored) {
+        }
     }
 }

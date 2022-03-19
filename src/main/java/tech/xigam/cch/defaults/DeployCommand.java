@@ -1,11 +1,13 @@
 package tech.xigam.cch.defaults;
 
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import tech.xigam.cch.command.Arguments;
 import tech.xigam.cch.command.Command;
 import tech.xigam.cch.utils.Argument;
 import tech.xigam.cch.utils.Interaction;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -15,6 +17,11 @@ public abstract class DeployCommand extends Command implements Arguments {
     }
 
     protected abstract boolean permissionCheck(Interaction interaction);
+
+    @Nullable
+    protected MessageEmbed embedify(String text) {
+        return null;
+    }
 
     @Override
     public void execute(Interaction interaction) {
@@ -28,15 +35,22 @@ public abstract class DeployCommand extends Command implements Arguments {
 
         if (!global && !interaction.isFromGuild()) {
             global = true;
-            interaction.sendMessage("You can't deploy slash commands to a DM, deploying globally instead.");
+            var embed = this.embedify("You can't deploy slash commands to a DM, deploying globally instead.");
+            if (embed == null)
+                interaction.reply("You can't deploy slash commands to a DM, deploying globally instead.");
+            else interaction.reply(embed);
         }
 
         if (delete) {
             interaction.getCommandHandler().downsert(global ? null : interaction.getGuild());
-            interaction.reply("Deleted all commands.");
+            var embed = this.embedify("Deleted all commands.");
+            if (embed == null) interaction.reply("Deleted all commands.");
+            else interaction.reply(embed);
         } else {
             interaction.getCommandHandler().deployAll(global ? null : interaction.getGuild());
-            interaction.reply("Deployed all commands.");
+            var embed = this.embedify("Deployed all commands.");
+            if (embed == null) interaction.reply("Deployed all commands.");
+            else interaction.reply(embed);
         }
     }
 

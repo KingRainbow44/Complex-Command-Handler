@@ -1,15 +1,16 @@
 package tech.xigam.cch;
 
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -43,9 +44,6 @@ public final class ComplexCommandHandler extends ListenerAdapter
     
     public Consumer<Interaction> onArgumentError = interaction -> {};
     
-    /**
-     * This constructor should be called in {@link JDABuilder#addEventListeners}
-     */
     public ComplexCommandHandler(boolean usePrefix) {
         this.usePrefix = usePrefix;
     }
@@ -59,6 +57,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
     }
     
     public void setJda(JDA jda) {
+        jda.addEventListener(this);
         this.jdaInstance = jda;
     }
     
@@ -102,12 +101,6 @@ public final class ComplexCommandHandler extends ListenerAdapter
                 false, this
         );
     }
-
-    /*
-     * Completing commands.
-     */
-
-
 
     /*
      * Handling interactive arguments.
@@ -186,6 +179,22 @@ public final class ComplexCommandHandler extends ListenerAdapter
 
         var command = commands.get(event.getName());
         command.prepareForCompletion(event, this);
+    }
+
+    @Override
+    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
+        String rawReference = event.getComponentId();
+        if (!rawReference.startsWith("<"))
+            return;
+
+        var label = rawReference.split("<")[1].split(">")[0];
+        var command = commands.get(label);
+        command.prepareForCallback(label, event, this);
+    }
+
+    @Override
+    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
+        
     }
 
     /**
