@@ -7,11 +7,15 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.utils.Interaction;
+import tech.xigam.cch.utils.MenuOption;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static tech.xigam.cch.utils.Validation.isUrl;
@@ -41,6 +45,8 @@ public interface BaseCommand {
     void prepareForCompletion(CommandAutoCompleteInteractionEvent event, ComplexCommandHandler handler);
 
     void prepareForCallback(String cmdLabel, ButtonInteractionEvent event, ComplexCommandHandler handler);
+
+    void prepareForCallback(String cmdLabel, SelectMenuInteractionEvent event, ComplexCommandHandler handler);
 
     /**
      * Creates a button with proper handling for this command.
@@ -77,5 +83,32 @@ public interface BaseCommand {
      */
     default Button createButton(ButtonStyle style, String reference, String text, Emoji emoji) {
         return Button.of(style, isUrl(reference) ? reference : "<" + this.getLabel().toLowerCase() + ">" + reference, text, emoji);
+    }
+
+    /**
+     * Creates a select menu with proper handling for this command.
+     *
+     * @param reference The reference to the select menu.
+     * @param options   The options to show in the select menu.
+     * @return The select menu.
+     */
+    default SelectMenu createSelectMenu(String reference, MenuOption... options) {
+        if (options.length == 0) throw new IllegalArgumentException("At least one option must be provided.");
+        return SelectMenu.create("<" + this.getLabel().toLowerCase() + ">" + reference)
+                .addOptions(Arrays.stream(options).map(MenuOption::asOption).toList()).build();
+    }
+
+    /**
+     * Creates a select menu with proper handling for this command.
+     *
+     * @param reference   The reference to the select menu.
+     * @param placeHolder The placeholder to display in the menu.
+     * @param options     The options to show in the select menu.
+     * @return The select menu.
+     */
+    default SelectMenu createSelectMenu(String reference, String placeHolder, MenuOption... options) {
+        if (options.length == 0) throw new IllegalArgumentException("At least one option must be provided.");
+        return SelectMenu.create("<" + this.getLabel().toLowerCase() + ">" + reference)
+                .setPlaceholder(placeHolder).addOptions(Arrays.stream(options).map(MenuOption::asOption).toList()).build();
     }
 }

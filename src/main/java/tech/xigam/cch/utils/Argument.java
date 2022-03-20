@@ -7,26 +7,6 @@ import java.util.Map;
 
 public final class Argument 
 {
-    private Argument(
-            String label, String description,
-            String reference, OptionType type, boolean required,
-            int positionInArguments
-    ) {
-        this.label = label;
-        this.description = description;
-        this.reference = reference;
-        this.argumentType = type;
-        this.required = required;
-        this.position = positionInArguments;
-    }
-    
-    public Argument range(int min, int max) {
-        if(argumentType != OptionType.INTEGER)
-            return this;
-        this.min = min; this.max = max;
-        return this;
-    }
-    
     public static Argument create(
             String label, String description,
             String reference, OptionType type, boolean required,
@@ -71,9 +51,30 @@ public final class Argument
         return commandChoices;
     }
 
+    private Argument(
+            String label, String description,
+            String reference, OptionType type, boolean required,
+            int positionInArguments
+    ) {
+        this.label = label;
+        this.description = description;
+        this.reference = reference;
+        this.argumentType = type;
+        this.required = required;
+        this.position = positionInArguments;
+    }
+
     /*
      * Setter methods.
      */
+
+    public Argument range(int min, int max) {
+        if (argumentType != OptionType.INTEGER)
+            return this;
+        this.min = min;
+        this.max = max;
+        return this;
+    }
 
     public Argument trailing(boolean isTrailing) {
         this.trailing = isTrailing;

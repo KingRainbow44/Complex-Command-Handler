@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.utils.Interaction;
 
@@ -45,6 +46,11 @@ public record Alias(String label, Command aliasOf) implements BaseCommand
 
     @Override
     public void prepareForCallback(String cmdLabel, ButtonInteractionEvent event, ComplexCommandHandler handler) {
+        aliasOf.prepareForCallback(cmdLabel, event, handler);
+    }
+
+    @Override
+    public void prepareForCallback(String cmdLabel, SelectMenuInteractionEvent event, ComplexCommandHandler handler) {
         aliasOf.prepareForCallback(cmdLabel, event, handler);
     }
 }

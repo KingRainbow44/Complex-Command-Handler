@@ -3,7 +3,12 @@ package tech.xigam.cch.utils;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A callback for buttons and forms.
@@ -14,6 +19,7 @@ public final class Callback {
     private final GenericComponentInteractionCreateEvent interactionExecutor;
 
     private Type deferred = Type.NONE;
+    private List<String> selected = new ArrayList<>();
 
     public Callback(ButtonInteractionEvent event) {
         this.interactionExecutor = event;
@@ -22,8 +28,26 @@ public final class Callback {
         this.reference = rawReference.split(">")[1];
     }
 
+    public Callback(SelectMenuInteractionEvent event) {
+        this.interactionExecutor = event;
+
+        var rawReference = event.getComponentId();
+        this.reference = rawReference.split(">")[1];
+
+        this.selected = event.getSelectedOptions().stream().map(SelectOption::getValue).toList();
+    }
+
     public String getReference() {
         return this.reference;
+    }
+
+    /**
+     * Exists **only** for menus.
+     *
+     * @return A list of options the user has selected.
+     */
+    public List<String> getSelectedOptions() {
+        return this.selected;
     }
 
     // ---------- UTILITY METHODS ---------- \\

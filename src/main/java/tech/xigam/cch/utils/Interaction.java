@@ -4,7 +4,9 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
@@ -34,7 +36,7 @@ public final class Interaction {
     private final Map<String, Object> arguments = new HashMap<>();
     private final List<String> rawArguments = new ArrayList<>();
 
-    private final List<Button> buttons = new ArrayList<>();
+    private final List<ActionRow> actionRows = new ArrayList<>();
 
     public Interaction(ComplexCommandHandler commandHandler, SlashCommandInteractionEvent event, BaseCommand command) {
         this.commandHandler = commandHandler;
@@ -121,8 +123,14 @@ public final class Interaction {
         return this.commandHandler;
     }
 
+    @Deprecated(since = "1.6.0")
     public Map<String, Object> getArguments() {
         return this.arguments; // Returns a list of STRING-MAPPED arguments.
+    }
+
+    @Deprecated(since = "1.6.0")
+    public List<String> getRawArguments() {
+        return this.rawArguments; // Returns a list of RAW UN-ORDERED ARGUMENTS.
     }
 
     public <T> T getArgument(String reference, Class<T> type) {
@@ -132,11 +140,7 @@ public final class Interaction {
     public <T> T getArgument(String reference, T fallback, Class<T> type) {
         return type.cast(this.arguments.getOrDefault(reference, fallback));
     }
-    
-    public List<String> getRawArguments() {
-        return this.rawArguments; // Returns a list of RAW UN-ORDERED ARGUMENTS.
-    }
-    
+
     public Member getMember() {
         return this.member;
     }
@@ -198,8 +202,13 @@ public final class Interaction {
 
     // ---------- INTERACTABLE METHODS ---------- \\
 
-    public Interaction addButton(Button button) {
-        this.buttons.add(button);
+    public Interaction addButtons(Button... buttons) {
+        this.actionRows.add(ActionRow.of(buttons));
+        return this;
+    }
+
+    public Interaction addSelectMenu(SelectMenu menu) {
+        this.actionRows.add(ActionRow.of(menu));
         return this;
     }
 
@@ -258,7 +267,7 @@ public final class Interaction {
                     send = this.slashExecutor.getHook().sendMessage((String) message);
                 else send = this.slashExecutor.getHook().sendMessageEmbeds((MessageEmbed) message);
 
-                if (!this.buttons.isEmpty()) send = send.addActionRow(this.buttons);
+                if (!this.actionRows.isEmpty()) send = send.addActionRows(this.actionRows);
                 send.queue();
             } else {
                 ReplyCallbackAction send;
@@ -268,7 +277,7 @@ public final class Interaction {
                 else
                     send = this.slashExecutor.replyEmbeds((MessageEmbed) message);
 
-                if (!this.buttons.isEmpty()) send = send.addActionRow(this.buttons);
+                if (!this.actionRows.isEmpty()) send = send.addActionRows(this.actionRows);
                 send.setEphemeral(this.isEphemeral()).queue();
             }
         } else {
@@ -280,7 +289,7 @@ public final class Interaction {
                         send = privateChannel.sendMessage((String) message);
                     else send = privateChannel.sendMessageEmbeds((MessageEmbed) message);
 
-                    if (!this.buttons.isEmpty()) send = send.setActionRow(this.buttons);
+                    if (!this.actionRows.isEmpty()) send = send.setActionRows(this.actionRows);
                     send.queue();
                 });
             } else {
@@ -289,7 +298,7 @@ public final class Interaction {
                     send = this.getMessage().reply((String) message);
                 else send = this.getMessage().replyEmbeds((MessageEmbed) message);
 
-                if (!this.buttons.isEmpty()) send = send.setActionRow(this.buttons);
+                if (!this.actionRows.isEmpty()) send = send.setActionRows(this.actionRows);
                 send.mentionRepliedUser(mentionUser).queue();
             }
         }

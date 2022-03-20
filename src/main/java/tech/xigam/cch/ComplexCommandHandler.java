@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -191,6 +192,17 @@ public final class ComplexCommandHandler extends ListenerAdapter
         command.prepareForCallback(label, event, this);
     }
 
+    @Override
+    public void onSelectMenuInteraction(@NotNull SelectMenuInteractionEvent event) {
+        String rawReference = event.getComponentId();
+        if (!rawReference.startsWith("<"))
+            return;
+
+        var label = rawReference.split("<")[1].split(">")[0];
+        var command = commands.get(label);
+        command.prepareForCallback(label, event, this);
+    }
+
     /**
      * Delete and create commands.
      */
@@ -206,89 +218,93 @@ public final class ComplexCommandHandler extends ListenerAdapter
     }
     
     public void deployAll(@Nullable Guild guild) {
-        Collection<SlashCommandData> commands = new ArrayList<>();
-        this.commands.forEach((label, command) -> {
-            SlashCommandData action = Commands.slash(label, command.getDescription());
+        try {
+            Collection<SlashCommandData> commands = new ArrayList<>();
+            this.commands.forEach((label, command) -> {
+                SlashCommandData action = Commands.slash(label, command.getDescription());
 
-            for (SubCommand subCommand : ((Command) command).getSubCommands().values()) {
-                if (command instanceof Baseless) {
-                    SubcommandData cmdData = new SubcommandData(subCommand.getLabel(), subCommand.getDescription());
-                    if (subCommand instanceof Arguments) {
-                        for (Argument argument : ((Arguments) subCommand).getArguments()) {
-                            OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                            if (argument.choices != null && argument.argumentType == OptionType.STRING)
-                                argumentData.addChoices(Argument.toChoices(argument));
-                            else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
-                                argumentData.setRequiredRange(argument.min, argument.max);
-                            if (argument.completable)
-                                argumentData.setAutoComplete(true);
-                            cmdData = cmdData.addOptions(argumentData);
+                for (SubCommand subCommand : ((Command) command).getSubCommands().values()) {
+                    if (command instanceof Baseless) {
+                        SubcommandData cmdData = new SubcommandData(subCommand.getLabel(), subCommand.getDescription());
+                        if (subCommand instanceof Arguments) {
+                            for (Argument argument : ((Arguments) subCommand).getArguments()) {
+                                OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
+                                if (argument.choices != null && argument.argumentType == OptionType.STRING)
+                                    argumentData.addChoices(Argument.toChoices(argument));
+                                else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
+                                    argumentData.setRequiredRange(argument.min, argument.max);
+                                if (argument.completable)
+                                    argumentData.setAutoComplete(true);
+                                cmdData = cmdData.addOptions(argumentData);
+                            }
+                        }
+                        action = action.addSubcommands(cmdData);
+                    } else {
+                        OptionData options = new OptionData(OptionType.STRING, "action", "Execute another sub-command/action of this command.", false);
+                        options = options.addChoice(subCommand.getLabel(), subCommand.getLabel());
+
+                        if (subCommand instanceof Arguments) {
+                            for (Argument argument : ((Arguments) subCommand).getArguments()) {
+                                OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
+                                if (argument.choices != null && argument.argumentType == OptionType.STRING)
+                                    argumentData.addChoices(Argument.toChoices(argument));
+                                else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
+                                    argumentData.setRequiredRange(argument.min, argument.max);
+                                if (argument.completable)
+                                    argumentData.setAutoComplete(true);
+                                action = action.addOptions(argumentData);
+                            }
+                        }
+
+                        action = action.addOptions(options);
+                    }
+
+                    for (Alias alias : subCommand.getAliases()) {
+                        CommandCreateAction subAction;
+                        if (guild == null) {
+                            subAction = jdaInstance.upsertCommand(alias.getLabel(), alias.getDescription());
+                        } else subAction = guild.upsertCommand(alias.getLabel(), alias.getDescription());
+
+                        if (subCommand instanceof Arguments) {
+                            for (Argument argument : ((Arguments) subCommand).getArguments()) {
+                                OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
+                                if (argument.choices != null && argument.argumentType == OptionType.STRING)
+                                    argumentData.addChoices(Argument.toChoices(argument));
+                                else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
+                                    argumentData.setRequiredRange(argument.min, argument.max);
+                                if (argument.completable)
+                                    argumentData.setAutoComplete(true);
+                                subAction = subAction.addOptions(argumentData);
+                            }
                         }
                     }
-                    action = action.addSubcommands(cmdData);
-                } else {
-                    OptionData options = new OptionData(OptionType.STRING, "action", "Execute another sub-command/action of this command.", false);
-                    options = options.addChoice(subCommand.getLabel(), subCommand.getLabel());
-
-                    if(subCommand instanceof Arguments) {
-                        for(Argument argument : ((Arguments) subCommand).getArguments()) {
-                            OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                            if (argument.choices != null && argument.argumentType == OptionType.STRING)
-                                argumentData.addChoices(Argument.toChoices(argument));
-                            else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
-                                argumentData.setRequiredRange(argument.min, argument.max);
-                            if (argument.completable)
-                                argumentData.setAutoComplete(true);
-                            action = action.addOptions(argumentData);
-                        }
-                    }
-
-                    action = action.addOptions(options);
                 }
 
-                for(Alias alias : subCommand.getAliases()) {
-                    CommandCreateAction subAction;
-                    if(guild == null) {
-                        subAction = jdaInstance.upsertCommand(alias.getLabel(), alias.getDescription());
-                    } else subAction = guild.upsertCommand(alias.getLabel(), alias.getDescription());
-
-                    if(subCommand instanceof Arguments) {
-                        for(Argument argument : ((Arguments) subCommand).getArguments()) {
-                            OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                            if (argument.choices != null && argument.argumentType == OptionType.STRING)
-                                argumentData.addChoices(Argument.toChoices(argument));
-                            else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
-                                argumentData.setRequiredRange(argument.min, argument.max);
-                            if (argument.completable)
-                                argumentData.setAutoComplete(true);
-                            subAction = subAction.addOptions(argumentData);
-                        }
+                if (command instanceof Arguments) {
+                    for (Argument argument : ((Arguments) command).getArguments()) {
+                        OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
+                        if (argument.choices != null && argument.argumentType == OptionType.STRING)
+                            argumentData.addChoices(Argument.toChoices(argument));
+                        else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
+                            argumentData.setRequiredRange(argument.min, argument.max);
+                        if (argument.completable)
+                            argumentData.setAutoComplete(true);
+                        action = action.addOptions(argumentData);
                     }
                 }
-            }
 
-            if(command instanceof Arguments) {
-                for(Argument argument : ((Arguments) command).getArguments()) {
-                    OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                    if (argument.choices != null && argument.argumentType == OptionType.STRING)
-                        argumentData.addChoices(Argument.toChoices(argument));
-                    else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
-                        argumentData.setRequiredRange(argument.min, argument.max);
-                    if (argument.completable)
-                        argumentData.setAutoComplete(true);
-                    action = action.addOptions(argumentData);
-                }
-            }
-            
-            commands.add(action);
-        });
-        
-        if(guild == null)
-            jdaInstance.updateCommands()
-                    .addCommands(commands).queue();
-        else
-            guild.updateCommands()
-                    .addCommands(commands).queue();
+                commands.add(action);
+            });
+
+            if (guild == null)
+                jdaInstance.updateCommands()
+                        .addCommands(commands).queue();
+            else
+                guild.updateCommands()
+                        .addCommands(commands).queue();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
 
     /**
