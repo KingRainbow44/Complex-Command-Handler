@@ -7,7 +7,7 @@
 
     <groupId>tech.xigam</groupId>
     <artifactId>CCH</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
 
     <name>Complex Command Handler</name>
     <description>A really useful and simple command handler for JDA.</description>
@@ -27,6 +27,7 @@
     <!-- 1.4.3 - Add support for all channel types. -->
     <!-- 1.5.0 - Implement buttons and handle attachments. -->
     <!-- 1.6.0 - Implement selection menus. -->
+    <!-- 1.6.1 - Store the member in callbacks. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -131,6 +132,13 @@
             <artifactId>JDA</artifactId>
             <version>5.0.0-alpha.9</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.9.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
