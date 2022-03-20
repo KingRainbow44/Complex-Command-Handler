@@ -1,5 +1,6 @@
 package tech.xigam.cch.utils;
 
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
@@ -7,6 +8,7 @@ import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEve
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +17,8 @@ import java.util.List;
  */
 public final class Callback {
     private final String reference;
+    @Nullable
+    private final Member member;
 
     private final GenericComponentInteractionCreateEvent interactionExecutor;
 
@@ -23,6 +27,7 @@ public final class Callback {
 
     public Callback(ButtonInteractionEvent event) {
         this.interactionExecutor = event;
+        this.member = event.getMember();
 
         var rawReference = event.getComponentId();
         this.reference = rawReference.split(">")[1];
@@ -30,6 +35,7 @@ public final class Callback {
 
     public Callback(SelectMenuInteractionEvent event) {
         this.interactionExecutor = event;
+        this.member = event.getMember();
 
         var rawReference = event.getComponentId();
         this.reference = rawReference.split(">")[1];
@@ -48,6 +54,11 @@ public final class Callback {
      */
     public List<String> getSelectedOptions() {
         return this.selected;
+    }
+
+    @Nullable
+    public Member getMember() {
+        return this.member;
     }
 
     // ---------- UTILITY METHODS ---------- \\
