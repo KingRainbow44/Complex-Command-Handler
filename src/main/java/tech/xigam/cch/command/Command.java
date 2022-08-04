@@ -119,40 +119,40 @@ public abstract class Command implements BaseCommand
         if (subCommand != null) {
             if (subCommands.containsKey(subCommand)) {
                 var subCmd = getSubCommand(subCommand);
-                if (subCmd instanceof Completable)
-                    ((Completable) subCmd).complete(new Completion(event));
+                if (subCmd instanceof Completable completable)
+                    completable.complete(new Completion(event));
                 return;
             }
         }
 
-        if (this instanceof Completable)
-            ((Completable) this).complete(new Completion(event));
+        if (this instanceof Completable completable)
+            completable.complete(new Completion(event));
     }
 
     @Override
     public void prepareForCallback(String cmdLabel, ButtonInteractionEvent event, ComplexCommandHandler handler) {
         if (subCommands.containsKey(cmdLabel)) {
             var subCmd = this.getSubCommand(cmdLabel);
-            if (subCmd instanceof Callable)
-                ((Callable) subCmd).callback(new Callback(event));
+            if (subCmd instanceof Callable callable)
+                callable.callback(new Callback(event));
             return;
         }
 
-        if (this instanceof Callable)
-            ((Callable) this).callback(new Callback(event));
+        if (this instanceof Callable callable)
+            callable.callback(new Callback(event));
     }
 
     @Override
     public void prepareForCallback(String cmdLabel, SelectMenuInteractionEvent event, ComplexCommandHandler handler) {
         if (subCommands.containsKey(cmdLabel)) {
             var subCmd = this.getSubCommand(cmdLabel);
-            if (subCmd instanceof Callable)
-                ((Callable) subCmd).callback(new Callback(event));
+            if (subCmd instanceof Callable callable)
+                callable.callback(new Callback(event));
             return;
         }
 
-        if (this instanceof Callable)
-            ((Callable) this).callback(new Callback(event));
+        if (this instanceof Callable callable)
+            callable.callback(new Callback(event));
     }
 
     public final Map<String, SubCommand> getSubCommands() {

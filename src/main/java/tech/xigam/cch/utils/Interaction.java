@@ -1,5 +1,6 @@
 package tech.xigam.cch.utils;
 
+import lombok.Getter;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -16,6 +17,7 @@ import tech.xigam.cch.command.BaseCommand;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -23,10 +25,21 @@ public final class Interaction {
     private final boolean isSlash, inGuild;
     private final ComplexCommandHandler commandHandler;
 
+    @Getter
+    private final User user;
+    @Getter
+    @Nullable
     private final Member member;
+    @Getter
+    @Nullable
     private final Message message;
+    @Getter
     private final MessageChannel channel;
+    @Getter
+    @Nullable
     private final Guild guild;
+    @Getter
+    private final BaseCommand command;
 
     private SlashCommandInteractionEvent slashExecutor = null;
 
@@ -44,26 +57,28 @@ public final class Interaction {
         this.inGuild = event.isFromGuild();
         this.slashExecutor = event;
 
+        this.user = event.getUser();
         this.member = event.getMember();
         this.message = null;
         this.channel = event.getChannel();
         this.guild = event.getGuild();
+        this.command = command;
 
-        if (command instanceof Arguments) {
+        if (command instanceof Arguments argsCmd) {
             Map<String, OptionType> argumentTypes = Argument.toOptions(
-                    ((Arguments) command).getArguments().toArray(new Argument[0])
+                    argsCmd.getArguments().toArray(new Argument[0])
             );
-            
-            for(Map.Entry<String, OptionType> entry : argumentTypes.entrySet()) {
+
+            for (Entry<String, OptionType> entry : argumentTypes.entrySet()) {
                 OptionMapping mapping = event.getOption(entry.getKey());
-                if(mapping == null) continue;
-                
-                switch(entry.getValue()) {
+                if (mapping == null) continue;
+
+                switch (entry.getValue()) {
                     case STRING -> this.arguments.put(entry.getKey(), mapping.getAsString());
                     case INTEGER, NUMBER -> this.arguments.put(entry.getKey(), mapping.getAsLong());
                     case BOOLEAN -> this.arguments.put(entry.getKey(), mapping.getAsBoolean());
                     case MENTIONABLE -> this.arguments.put(entry.getKey(), mapping.getAsMentionable());
-                    case USER -> this.arguments.put(entry.getKey(), mapping.getAsUser());
+                    case USER -> this.arguments.put(entry.getKey(), mapping.getAsMember());
                     case ROLE -> this.arguments.put(entry.getKey(), mapping.getAsRole());
                     case CHANNEL -> this.arguments.put(entry.getKey(), mapping.getAsGuildChannel());
                     case ATTACHMENT -> this.arguments.put(entry.getKey(), mapping.getAsAttachment());
@@ -80,15 +95,17 @@ public final class Interaction {
         this.commandHandler = commandHandler;
         this.isSlash = false;
         this.inGuild = message.isFromGuild();
-        
+
+        this.user = message.getAuthor();
         this.member = message.getMember();
         this.message = message;
         this.channel = channel;
         this.guild = channel.getGuild();
-        
-        if(command instanceof Arguments) {
-            Argument[] args = ((Arguments) command).getArguments().toArray(new Argument[0]);
-            
+        this.command = command;
+
+        if (command instanceof Arguments argsCmd) {
+            Argument[] args = argsCmd.getArguments().toArray(new Argument[0]);
+
             try {
                 int attachmentCount = 0;
                 for (int i = 0; i < args.length; i++) {
@@ -139,23 +156,6 @@ public final class Interaction {
 
     public <T> T getArgument(String reference, T fallback, Class<T> type) {
         return type.cast(this.arguments.getOrDefault(reference, fallback));
-    }
-
-    public Member getMember() {
-        return this.member;
-    }
-    
-    public MessageChannel getChannel() {
-        return this.channel;
-    }
-    
-    public Guild getGuild() {
-        return this.guild;
-    }
-    
-    @Nullable
-    public Message getMessage() {
-        return this.message;
     }
 
     @Nullable
@@ -282,7 +282,7 @@ public final class Interaction {
             }
         } else {
             if (this.isEphemeral() && this.sendToDMs) {
-                this.getMember().getUser().openPrivateChannel().queue(privateChannel -> {
+                this.getUser().openPrivateChannel().queue(privateChannel -> {
                     MessageAction send;
 
                     if (message instanceof String)

@@ -1,6 +1,6 @@
 package tech.xigam.cch.utils;
 
-import net.dv8tion.jda.api.entities.Emoji;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 
 import javax.annotation.Nullable;
@@ -44,7 +44,7 @@ public final class MenuOption {
         return option;
     }
 
-    public String label, description;
-    public String reference;
-    public Emoji emoji;
+    public final String label, description;
+    public final String reference;
+    public final Emoji emoji;
 }

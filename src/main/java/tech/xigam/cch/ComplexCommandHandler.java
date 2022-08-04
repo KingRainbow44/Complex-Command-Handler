@@ -51,24 +51,29 @@ public final class ComplexCommandHandler extends ListenerAdapter
     public ComplexCommandHandler setPrefix(String prefix) {
         this.prefix = prefix; return this;
     }
-    
+
     public ComplexCommandHandler registerCommand(BaseCommand command) {
-        commands.put(command.getLabel(), command); return this;
+        commands.put(command.getLabel(), command);
+        return this;
     }
-    
+
     public void setJda(JDA jda) {
         jda.addEventListener(this);
         this.jdaInstance = jda;
     }
-    
+
+    public Map<String, BaseCommand> getRegisteredCommands() {
+        return new HashMap<>(this.commands);
+    }
+
     /*
      * Executing commands.
      */
-    
+
     private void runCommand(String command, MessageReceivedEvent event) {
         executeCommand(command, event.getMessage(), event.getMember(), event.getTextChannel());
     }
-    
+
     private void runCommand(String command, MessageUpdateEvent event) {
         executeCommand(command, event.getMessage(), event.getMember(), event.getTextChannel());
     }
@@ -226,8 +231,8 @@ public final class ComplexCommandHandler extends ListenerAdapter
                 for (SubCommand subCommand : ((Command) command).getSubCommands().values()) {
                     if (command instanceof Baseless) {
                         SubcommandData cmdData = new SubcommandData(subCommand.getLabel(), subCommand.getDescription());
-                        if (subCommand instanceof Arguments) {
-                            for (Argument argument : ((Arguments) subCommand).getArguments()) {
+                        if (subCommand instanceof Arguments argsCmd) {
+                            for (Argument argument : argsCmd.getArguments()) {
                                 OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
                                 if (argument.choices != null && argument.argumentType == OptionType.STRING)
                                     argumentData.addChoices(Argument.toChoices(argument));
@@ -243,8 +248,8 @@ public final class ComplexCommandHandler extends ListenerAdapter
                         OptionData options = new OptionData(OptionType.STRING, "action", "Execute another sub-command/action of this command.", false);
                         options = options.addChoice(subCommand.getLabel(), subCommand.getLabel());
 
-                        if (subCommand instanceof Arguments) {
-                            for (Argument argument : ((Arguments) subCommand).getArguments()) {
+                        if (subCommand instanceof Arguments argsCmd) {
+                            for (Argument argument : argsCmd.getArguments()) {
                                 OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
                                 if (argument.choices != null && argument.argumentType == OptionType.STRING)
                                     argumentData.addChoices(Argument.toChoices(argument));
@@ -265,8 +270,8 @@ public final class ComplexCommandHandler extends ListenerAdapter
                             subAction = jdaInstance.upsertCommand(alias.getLabel(), alias.getDescription());
                         } else subAction = guild.upsertCommand(alias.getLabel(), alias.getDescription());
 
-                        if (subCommand instanceof Arguments) {
-                            for (Argument argument : ((Arguments) subCommand).getArguments()) {
+                        if (subCommand instanceof Arguments argsCmd) {
+                            for (Argument argument : argsCmd.getArguments()) {
                                 OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
                                 if (argument.choices != null && argument.argumentType == OptionType.STRING)
                                     argumentData.addChoices(Argument.toChoices(argument));
@@ -280,8 +285,8 @@ public final class ComplexCommandHandler extends ListenerAdapter
                     }
                 }
 
-                if (command instanceof Arguments) {
-                    for (Argument argument : ((Arguments) command).getArguments()) {
+                if (command instanceof Arguments argsCmd) {
+                    for (Argument argument : argsCmd.getArguments()) {
                         OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
                         if (argument.choices != null && argument.argumentType == OptionType.STRING)
                             argumentData.addChoices(Argument.toChoices(argument));

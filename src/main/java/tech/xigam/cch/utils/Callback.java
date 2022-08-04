@@ -102,36 +102,36 @@ public final class Callback {
         switch (this.deferred) {
             case EDIT -> {
                 var hook = this.interactionExecutor.getHook();
-                if (message instanceof String) {
-                    hook.editOriginal((String) message).queue();
-                } else if (message instanceof MessageEmbed) {
-                    hook.editOriginalEmbeds((MessageEmbed) message).queue();
-                } else if (message instanceof ActionRow) {
-                    hook.editOriginalComponents((ActionRow) message).queue();
+                if (message instanceof String msg) {
+                    hook.editOriginal(msg).queue();
+                } else if (message instanceof MessageEmbed embed) {
+                    hook.editOriginalEmbeds(embed).queue();
+                } else if (message instanceof ActionRow row) {
+                    hook.editOriginalComponents(row).queue();
                 }
             }
 
             case REPLY -> {
                 var hook = this.interactionExecutor.getHook();
-                if (message instanceof String) {
-                    hook.sendMessage((String) message).queue();
-                } else if (message instanceof MessageEmbed) {
-                    hook.sendMessageEmbeds((MessageEmbed) message).queue();
+                if (message instanceof String msg) {
+                    hook.sendMessage(msg).queue();
+                } else if (message instanceof MessageEmbed embed) {
+                    hook.sendMessageEmbeds(embed).queue();
                 }
             }
 
             case NONE -> {
                 if (type == Type.EDIT) {
-                    if (message instanceof String) {
-                        this.interactionExecutor.editMessage((String) message).queue();
-                    } else if (message instanceof MessageEmbed) {
-                        this.interactionExecutor.editMessageEmbeds((MessageEmbed) message).queue();
+                    if (message instanceof String msg) {
+                        this.interactionExecutor.editMessage(msg).queue();
+                    } else if (message instanceof MessageEmbed embed) {
+                        this.interactionExecutor.editMessageEmbeds(embed).queue();
                     }
                 } else {
-                    if (message instanceof String) {
-                        this.interactionExecutor.reply((String) message).queue();
-                    } else if (message instanceof MessageEmbed) {
-                        this.interactionExecutor.replyEmbeds((MessageEmbed) message).queue();
+                    if (message instanceof String msg) {
+                        this.interactionExecutor.reply(msg).queue();
+                    } else if (message instanceof MessageEmbed embed) {
+                        this.interactionExecutor.replyEmbeds(embed).queue();
                     }
                 }
             }

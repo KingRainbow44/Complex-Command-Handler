@@ -1,10 +1,13 @@
 package tech.xigam.cch.utils;
 
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 
 import java.util.Map;
 
+@Accessors(fluent = true, chain = true)
 public final class Argument 
 {
     public static Argument create(
@@ -76,24 +79,14 @@ public final class Argument
         return this;
     }
 
-    public Argument trailing(boolean isTrailing) {
-        this.trailing = isTrailing;
-        return this;
-    }
+    public final String label;
+    public final String description;
 
-    public Argument completable(boolean isCompletable) {
-        this.completable = isCompletable;
-        return this;
-    }
+    public final String reference;
+    public final OptionType argumentType;
+    public final boolean required;
 
-    public String label;
-    public String description;
-
-    public String reference;
-    public OptionType argumentType;
-    public boolean required;
-
-    public int position;
+    public final int position;
 
     /*
      * Extra arguments.
@@ -101,6 +94,8 @@ public final class Argument
 
     public String[] choices = null;
     public int min = -1, max = -1;
+    @Setter
     public boolean trailing = false;
+    @Setter
     public boolean completable = false;
 }
