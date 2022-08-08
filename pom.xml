@@ -7,7 +7,7 @@
 
     <groupId>tech.xigam</groupId>
     <artifactId>CCH</artifactId>
-    <version>1.6.2</version>
+    <version>1.6.3</version>
 
     <name>Complex Command Handler</name>
     <description>A really useful and simple command handler for JDA.</description>
@@ -29,6 +29,7 @@
     <!-- 1.6.0 - Implement selection menus. -->
     <!-- 1.6.1 - Store the member in callbacks. -->
     <!-- 1.6.2 - Additional bug fixes + internal clean-up. -->
+    <!-- 1.6.3 - Allow setting buttons when editing a callback. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

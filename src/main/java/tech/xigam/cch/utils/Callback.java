@@ -6,6 +6,8 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 
 import javax.annotation.Nullable;
@@ -91,6 +93,21 @@ public final class Callback {
 
     public void reply(MessageEmbed embed) {
         this.send(embed, Type.REPLY);
+    }
+
+    public Callback edit(Button... buttons) {
+        this.edit(ActionRow.of(buttons));
+        return this;
+    }
+
+    public Callback edit(SelectMenu menu) {
+        this.edit(ActionRow.of(menu));
+        return this;
+    }
+
+    public Callback edit(ActionRow row) {
+        this.send(row, Type.EDIT);
+        return this;
     }
 
     /**
