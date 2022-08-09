@@ -89,7 +89,7 @@ public final class Interaction {
     
     public Interaction(
             ComplexCommandHandler commandHandler,
-            Message message, TextChannel channel,
+            Message message, MessageChannel channel,
             List<String> arguments, BaseCommand command
     ) {
         this.commandHandler = commandHandler;
@@ -100,8 +100,11 @@ public final class Interaction {
         this.member = message.getMember();
         this.message = message;
         this.channel = channel;
-        this.guild = channel.getGuild();
         this.command = command;
+
+        if (channel instanceof GuildChannel guildChannel)
+            this.guild = guildChannel.getGuild();
+        else this.guild = null;
 
         if (command instanceof Arguments argsCmd) {
             Argument[] args = argsCmd.getArguments().toArray(new Argument[0]);

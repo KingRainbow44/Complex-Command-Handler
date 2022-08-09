@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -89,7 +89,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
                 .prepareForExecution(event, this);
     }
 
-    private void executeCommand(String command, Message message2, Member member, TextChannel textChannel) {
+    private void executeCommand(String command, Message message2, Member member, MessageChannel textChannel) {
         if (!commands.containsKey(command))
             return;
 
