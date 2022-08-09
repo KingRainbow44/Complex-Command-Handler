@@ -71,11 +71,11 @@ public final class ComplexCommandHandler extends ListenerAdapter
      */
 
     private void runCommand(String command, MessageReceivedEvent event) {
-        executeCommand(command, event.getMessage(), event.getMember(), event.getTextChannel());
+        executeCommand(command, event.getMessage(), event.getMember(), event.getChannel());
     }
 
     private void runCommand(String command, MessageUpdateEvent event) {
-        executeCommand(command, event.getMessage(), event.getMember(), event.getTextChannel());
+        executeCommand(command, event.getMessage(), event.getMember(), event.getChannel());
     }
 
     private void runCommand(SlashCommandInteractionEvent event) {
