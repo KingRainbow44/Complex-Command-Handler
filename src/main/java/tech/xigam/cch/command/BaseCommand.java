@@ -2,15 +2,16 @@ package tech.xigam.cch.command;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.utils.Interaction;
 import tech.xigam.cch.utils.MenuOption;
@@ -46,7 +47,7 @@ public interface BaseCommand {
 
     void prepareForCallback(String cmdLabel, ButtonInteractionEvent event, ComplexCommandHandler handler);
 
-    void prepareForCallback(String cmdLabel, SelectMenuInteractionEvent event, ComplexCommandHandler handler);
+    void prepareForCallback(String cmdLabel, StringSelectInteractionEvent event, ComplexCommandHandler handler);
 
     /**
      * Creates a button with proper handling for this command.
@@ -94,7 +95,7 @@ public interface BaseCommand {
      */
     default SelectMenu createSelectMenu(String reference, MenuOption... options) {
         if (options.length == 0) throw new IllegalArgumentException("At least one option must be provided.");
-        return SelectMenu.create("<" + this.getLabel().toLowerCase() + ">" + reference)
+        return StringSelectMenu.create("<" + this.getLabel().toLowerCase() + ">" + reference)
                 .addOptions(Arrays.stream(options).map(MenuOption::asOption).toList()).build();
     }
 
@@ -108,7 +109,7 @@ public interface BaseCommand {
      */
     default SelectMenu createSelectMenu(String reference, String placeHolder, MenuOption... options) {
         if (options.length == 0) throw new IllegalArgumentException("At least one option must be provided.");
-        return SelectMenu.create("<" + this.getLabel().toLowerCase() + ">" + reference)
+        return StringSelectMenu.create("<" + this.getLabel().toLowerCase() + ">" + reference)
                 .setPlaceholder(placeHolder).addOptions(Arrays.stream(options).map(MenuOption::asOption).toList()).build();
     }
 }

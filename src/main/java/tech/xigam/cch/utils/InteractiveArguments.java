@@ -2,8 +2,8 @@ package tech.xigam.cch.utils;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.command.BaseCommand;
 
@@ -28,9 +28,12 @@ public final class InteractiveArguments {
             Message replyTo, Member member, BaseCommand toExecute,
             List<String> questions, ComplexCommandHandler handler
     ) {
-        this.message = replyTo; this.member = member;
-        this.command = toExecute; this.questions = questions;
-        this.channel = replyTo.getTextChannel(); this.handler = handler;
+        this.message = replyTo;
+        this.member = member;
+        this.command = toExecute;
+        this.questions = questions;
+        this.channel = replyTo.getChannel().asTextChannel();
+        this.handler = handler;
     }
 
     public void start(Message replyTo) {

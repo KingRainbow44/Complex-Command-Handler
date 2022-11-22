@@ -2,11 +2,11 @@ package tech.xigam.cch.command;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.utils.*;
@@ -145,7 +145,7 @@ public abstract class Command implements BaseCommand
     }
 
     @Override
-    public void prepareForCallback(String cmdLabel, SelectMenuInteractionEvent event, ComplexCommandHandler handler) {
+    public void prepareForCallback(String cmdLabel, StringSelectInteractionEvent event, ComplexCommandHandler handler) {
         if (subCommands.containsKey(cmdLabel)) {
             var subCmd = this.getSubCommand(cmdLabel);
             if (subCmd instanceof Callable callable)

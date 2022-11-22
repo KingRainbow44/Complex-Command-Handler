@@ -2,20 +2,22 @@ package tech.xigam.cch.utils;
 
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
-import net.dv8tion.jda.api.requests.restaction.WebhookMessageAction;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
+import org.jetbrains.annotations.Nullable;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.command.Arguments;
 import tech.xigam.cch.command.BaseCommand;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -80,7 +82,7 @@ public final class Interaction {
                     case MENTIONABLE -> this.arguments.put(entry.getKey(), mapping.getAsMentionable());
                     case USER -> this.arguments.put(entry.getKey(), mapping.getAsMember());
                     case ROLE -> this.arguments.put(entry.getKey(), mapping.getAsRole());
-                    case CHANNEL -> this.arguments.put(entry.getKey(), mapping.getAsGuildChannel());
+                    case CHANNEL -> this.arguments.put(entry.getKey(), mapping.getAsChannel());
                     case ATTACHMENT -> this.arguments.put(entry.getKey(), mapping.getAsAttachment());
                 }
             }
@@ -264,13 +266,13 @@ public final class Interaction {
     private void send(Object message, boolean mentionUser) {
         if (this.isSlash()) {
             if (this.isDeferred()) {
-                WebhookMessageAction<Message> send;
+                WebhookMessageCreateAction<Message> send;
 
                 if (message instanceof String)
                     send = this.slashExecutor.getHook().sendMessage((String) message);
                 else send = this.slashExecutor.getHook().sendMessageEmbeds((MessageEmbed) message);
 
-                if (!this.actionRows.isEmpty()) send = send.addActionRows(this.actionRows);
+                if (!this.actionRows.isEmpty()) send = send.addComponents(this.actionRows);
                 send.queue();
             } else {
                 ReplyCallbackAction send;
@@ -280,28 +282,28 @@ public final class Interaction {
                 else
                     send = this.slashExecutor.replyEmbeds((MessageEmbed) message);
 
-                if (!this.actionRows.isEmpty()) send = send.addActionRows(this.actionRows);
+                if (!this.actionRows.isEmpty()) send = send.addComponents(this.actionRows);
                 send.setEphemeral(this.isEphemeral()).queue();
             }
         } else {
             if (this.isEphemeral() && this.sendToDMs) {
                 this.getUser().openPrivateChannel().queue(privateChannel -> {
-                    MessageAction send;
+                    MessageCreateAction send;
 
                     if (message instanceof String)
                         send = privateChannel.sendMessage((String) message);
                     else send = privateChannel.sendMessageEmbeds((MessageEmbed) message);
 
-                    if (!this.actionRows.isEmpty()) send = send.setActionRows(this.actionRows);
+                    if (!this.actionRows.isEmpty()) send = send.addComponents(this.actionRows);
                     send.queue();
                 });
             } else {
-                MessageAction send;
+                MessageCreateAction send;
                 if (message instanceof String)
                     send = this.getMessage().reply((String) message);
                 else send = this.getMessage().replyEmbeds((MessageEmbed) message);
 
-                if (!this.actionRows.isEmpty()) send = send.setActionRows(this.actionRows);
+                if (!this.actionRows.isEmpty()) send = send.setComponents(this.actionRows);
                 send.mentionRepliedUser(mentionUser).queue();
             }
         }
