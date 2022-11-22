@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
@@ -219,6 +220,7 @@ public final class Interaction {
 
     // ---------- REPLY METHODS ---------- \\
 
+
     public Interaction sendMessage(String message) {
         getChannel().sendMessage(message).queue();
         return this;
@@ -227,6 +229,11 @@ public final class Interaction {
     public Interaction sendMessage(MessageEmbed message) {
         getChannel().sendMessageEmbeds(message).queue();
         return this;
+    }
+
+    public void modal(Modal modal) {
+        if (!this.isSlash()) throw new IllegalStateException("Cannot send a modal to a non-slash command!");
+        this.slashExecutor.replyModal(modal).queue();
     }
 
     public void reply(String message) {
