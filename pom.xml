@@ -33,6 +33,7 @@
     <!-- 1.6.4 - Fix a bug with DM commands not being processed. -->
     <!-- 1.6.5 - Hotfix for 1.6.4. -->
     <!-- 1.6.6 - Add support for JDA v5-alpha.22 & Modal support -->
+    <!-- 1.6.7 - Add support for JDA v5-beta.10 & formatting changes. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
