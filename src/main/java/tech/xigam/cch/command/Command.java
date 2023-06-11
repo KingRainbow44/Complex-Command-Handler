@@ -59,14 +59,14 @@ public abstract class Command implements BaseCommand
                     .prepareForExecution(args, message, sender, channel, false, handler);
         }
 
-        if(executeBase) {
-            if(this instanceof Arguments) {
+        if (executeBase) {
+            if (this instanceof Arguments) {
                 int requiredArguments = 0;
                 for(Argument argument : ((Arguments) this).getArguments()) {
-                    if(argument.required) requiredArguments++;
+                    if (argument.required) requiredArguments++;
                 }
                 
-                if(args.size() < requiredArguments) {
+                if (args.size() < requiredArguments) {
                     handler.onArgumentError.accept(
                             new Interaction(handler, message, channel, arguments, this)
                     ); return;

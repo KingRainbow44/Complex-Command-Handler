@@ -4,7 +4,6 @@ import tech.xigam.cch.utils.Argument;
 
 import java.util.Collection;
 
-public interface Arguments 
-{
+public interface Arguments {
     Collection<Argument> getArguments();
 }

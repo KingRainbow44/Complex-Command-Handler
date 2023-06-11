@@ -12,8 +12,7 @@ import tech.xigam.cch.utils.Interaction;
 
 import java.util.List;
 
-public record Alias(String label, Command aliasOf) implements BaseCommand
-{
+public record Alias(String label, Command aliasOf) implements BaseCommand {
     @Override
     public String getLabel() {
         return this.label;

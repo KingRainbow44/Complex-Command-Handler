@@ -137,17 +137,17 @@ public final class ComplexCommandHandler extends ListenerAdapter
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        if(!this.usePrefix) return;
+        if (!this.usePrefix) return;
 
-        if(event.getAuthor().isBot())
+        if (event.getAuthor().isBot())
             return;
         
-        if(!event.getMessage().getContentRaw().startsWith(prefix)) {
+        if (!event.getMessage().getContentRaw().startsWith(prefix)) {
             this.checkMessageInteraction(event.getMessage()); return;
         }
         
         String message = event.getMessage().getContentRaw();
-        if(message.split(this.prefix).length < 2)
+        if (message.split(this.prefix).length < 2)
             return;
         this.runCommand(
                 message.split(this.prefix)[1].split(" ")[0], event
@@ -156,16 +156,16 @@ public final class ComplexCommandHandler extends ListenerAdapter
 
     @Override
     public void onMessageUpdate(@NotNull MessageUpdateEvent event) {
-        if(!usePrefix) return;
+        if (!usePrefix) return;
 
-        if(event.getAuthor().isBot())
+        if (event.getAuthor().isBot())
             return;
 
         String message = event.getMessage().getContentRaw();
-        if(!message.startsWith(prefix))
+        if (!message.startsWith(prefix))
             return;
         
-        if(message.split(this.prefix).length < 2)
+        if (message.split(this.prefix).length < 2)
             return;
         this.runCommand(
                 message.split(this.prefix)[1].split(" ")[0], event
@@ -316,7 +316,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
      * Downsert, then upsert commands.
      */
     @Deprecated public void deploy(@Nullable Guild guild) {
-        if(guild == null) {
+        if (guild == null) {
             jdaInstance.updateCommands()
                     .addCommands().queue();
         } else {
@@ -326,14 +326,14 @@ public final class ComplexCommandHandler extends ListenerAdapter
         
         commands.forEach((label, command) -> {
             CommandCreateAction action;
-            if(guild == null) {
+            if (guild == null) {
                 action = jdaInstance.upsertCommand(label, command.getDescription());
             } else action = guild.upsertCommand(label, command.getDescription());
             
             for(SubCommand subCommand : ((Command) command).getSubCommands().values()) {
                 if (command instanceof Baseless) {
                     SubcommandData cmdData = new SubcommandData(subCommand.getLabel(), subCommand.getDescription());
-                    if(subCommand instanceof Arguments) {
+                    if (subCommand instanceof Arguments) {
                         for(Argument argument : ((Arguments) subCommand).getArguments()) {
                             OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
                             if (argument.choices != null && argument.argumentType == OptionType.STRING)
@@ -348,7 +348,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
                     OptionData options = new OptionData(OptionType.STRING, "action", "Execute another sub-command/action of this command.", false);
                     options = options.addChoice(subCommand.getLabel(), subCommand.getLabel());
                     
-                    if(subCommand instanceof Arguments) {
+                    if (subCommand instanceof Arguments) {
                         for(Argument argument : ((Arguments) subCommand).getArguments()) {
                             OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
                             if (argument.choices != null && argument.argumentType == OptionType.STRING)
@@ -364,11 +364,11 @@ public final class ComplexCommandHandler extends ListenerAdapter
                 
                 for(Alias alias : subCommand.getAliases()) {
                     CommandCreateAction subAction;
-                    if(guild == null) {
+                    if (guild == null) {
                         subAction = jdaInstance.upsertCommand(alias.getLabel(), alias.getDescription());
                     } else subAction = guild.upsertCommand(alias.getLabel(), alias.getDescription());
                     
-                    if(subCommand instanceof Arguments) {
+                    if (subCommand instanceof Arguments) {
                         for(Argument argument : ((Arguments) subCommand).getArguments()) {
                             OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
                             if (argument.choices != null && argument.argumentType == OptionType.STRING)
@@ -381,7 +381,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
                 }
             }
             
-            if(command instanceof Arguments) {
+            if (command instanceof Arguments) {
                 for(Argument argument : ((Arguments) command).getArguments()) {
                     OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
                     if (argument.choices != null && argument.argumentType == OptionType.STRING)

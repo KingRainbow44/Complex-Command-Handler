@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import java.util.Map;
 
 @Accessors(fluent = true, chain = true)
-public final class Argument 
+public final class Argument
 {
     public static Argument create(
             String label, String description,
@@ -94,8 +94,11 @@ public final class Argument
 
     public String[] choices = null;
     public int min = -1, max = -1;
-    @Setter
-    public boolean trailing = false;
-    @Setter
-    public boolean completable = false;
+    /**
+     * Whether this argument is a trailing argument.
+     * Trailing arguments are arguments that take up the rest of the command.
+     * This applies only to prefix commands.
+     */
+    @Setter public boolean trailing = false;
+    @Setter public boolean completable = false;
 }

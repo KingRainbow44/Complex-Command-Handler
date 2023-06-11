@@ -1,5 +1,6 @@
 package tech.xigam.cch.utils;
 
+import lombok.Getter;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -13,17 +14,17 @@ import java.util.List;
 import java.util.Map;
 
 public final class InteractiveArguments {
-    private static final HashMap<String, Integer> index = new HashMap<>(); 
-    
+    private static final Map<String, Integer> index = new HashMap<>();
+
     private final List<String> questions;
-    private final Member member;
+    @Getter private final Member member;
     private final BaseCommand command;
-    private final TextChannel channel;
+    @Getter private final TextChannel channel;
     private final Message message;
-    
+
     private final ComplexCommandHandler handler;
     private final Map<Integer, String> answers = new HashMap<>();
-    
+
     public InteractiveArguments(
             Message replyTo, Member member, BaseCommand toExecute,
             List<String> questions, ComplexCommandHandler handler
@@ -37,7 +38,7 @@ public final class InteractiveArguments {
     }
 
     public void start(Message replyTo) {
-        if(index.containsKey(member.getId())) return;
+        if (index.containsKey(member.getId())) return;
         index.put(member.getId(), 0);
 
         replyTo.reply(
@@ -51,10 +52,10 @@ public final class InteractiveArguments {
                 response.getContentRaw()
         ); index.put(this.member.getId(), index.get(this.member.getId()) + 1);
 
-        if((index.get(this.member.getId()) + 1) > this.questions.size()) {
+        if ((index.get(this.member.getId()) + 1) > this.questions.size()) {
             this.handler.destroyInteraction(this);
             index.remove(this.member.getId());
-            
+
             this.command.prepareForExecution(
                     new ArrayList<>(this.answers.values()), this.message, this.member,
                     this.channel, false, this.handler
@@ -64,13 +65,5 @@ public final class InteractiveArguments {
                     this.questions.get(index.get(this.member.getId()))
             ).mentionRepliedUser(false).queue();
         }
-    }
-
-    public Member getMember() {
-        return member;
-    }
-
-    public MessageChannel getChannel() {
-        return channel;
     }
 }
