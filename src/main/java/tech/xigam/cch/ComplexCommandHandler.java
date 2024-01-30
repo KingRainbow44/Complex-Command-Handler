@@ -6,20 +6,21 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.commands.build.*;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tech.xigam.cch.command.*;
 import tech.xigam.cch.command.modifiers.Arguments;
 import tech.xigam.cch.command.modifiers.Baseless;
@@ -33,12 +34,15 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import static net.dv8tion.jda.api.interactions.commands.Command.Type.*;
+
 /**
  * The main command handler.
  * Should be initialized on build.
  */
-public final class ComplexCommandHandler extends ListenerAdapter
-{
+public final class ComplexCommandHandler extends ListenerAdapter {
+    private final Logger logger = LoggerFactory.getLogger("CCH");
+
     private JDA jdaInstance;
     private final boolean usePrefix;
 
@@ -87,6 +91,28 @@ public final class ComplexCommandHandler extends ListenerAdapter
     }
 
     private void runCommand(SlashCommandInteractionEvent event) {
+        if (!commands.containsKey(event.getName())) {
+            event.reply("Command not found.")
+                    .queue();
+            return;
+        }
+
+        commands.get(event.getName())
+                .prepareForExecution(event, this);
+    }
+
+    private void runCommand(UserContextInteractionEvent event) {
+        if (!commands.containsKey(event.getName())) {
+            event.reply("Command not found.")
+                    .queue();
+            return;
+        }
+
+        commands.get(event.getName())
+                .prepareForExecution(event, this);
+    }
+
+    private void runCommand(MessageContextInteractionEvent event) {
         if (!commands.containsKey(event.getName())) {
             event.reply("Command not found.")
                     .queue();
@@ -216,6 +242,16 @@ public final class ComplexCommandHandler extends ListenerAdapter
         command.prepareForCallback(label, event, this);
     }
 
+    @Override
+    public void onUserContextInteraction(UserContextInteractionEvent event) {
+        this.runCommand(event);
+    }
+
+    @Override
+    public void onMessageContextInteraction(MessageContextInteractionEvent event) {
+        this.runCommand(event);
+    }
+
     /**
      * Delete and create commands.
      */
@@ -232,9 +268,11 @@ public final class ComplexCommandHandler extends ListenerAdapter
 
     public void deployAll(@Nullable Guild guild) {
         try {
-            Collection<SlashCommandData> commands = new ArrayList<>();
+            Collection<CommandData> commands = new ArrayList<>();
             this.commands.forEach((label, command) -> {
-                SlashCommandData action = Commands.slash(label, command.getDescription());
+                var action = (SlashCommandData) (command.commandType() == SLASH ?
+                        Commands.slash(command.getLabel(), command.getDescription()) :
+                        Commands.context(command.commandType(), command.getLabel()));
 
                 for (SubCommand subCommand : ((Command) command).getSubCommands().values()) {
                     if (command instanceof Baseless baseless && baseless.isBaseless()) {
@@ -251,7 +289,10 @@ public final class ComplexCommandHandler extends ListenerAdapter
                                 cmdData = cmdData.addOptions(argumentData);
                             }
                         }
-                        action = action.addSubcommands(cmdData);
+
+                        if (command.commandType() == SLASH) {
+                            action = action.addSubcommands(cmdData);
+                        }
                     } else {
                         OptionData options = new OptionData(OptionType.STRING, "action", "Execute another sub-command/action of this command.", false);
                         options = options.addChoice(subCommand.getLabel(), subCommand.getLabel());
@@ -265,11 +306,16 @@ public final class ComplexCommandHandler extends ListenerAdapter
                                     argumentData.setRequiredRange(argument.min, argument.max);
                                 if (argument.completable)
                                     argumentData.setAutoComplete(true);
-                                action = action.addOptions(argumentData);
+
+                                if (command.commandType() == SLASH) {
+                                    action = action.addOptions(argumentData);
+                                }
                             }
                         }
 
-                        action = action.addOptions(options);
+                        if (command.commandType() == SLASH) {
+                            action = action.addOptions(options);
+                        }
                     }
 
                     for (Alias alias : subCommand.getAliases()) {
@@ -302,7 +348,10 @@ public final class ComplexCommandHandler extends ListenerAdapter
                             argumentData.setRequiredRange(argument.min, argument.max);
                         if (argument.completable)
                             argumentData.setAutoComplete(true);
-                        action = action.addOptions(argumentData);
+
+                        if (command.commandType() == SLASH) {
+                            action = action.addOptions(argumentData);
+                        }
                     }
                 }
 
@@ -326,7 +375,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
                 guild.updateCommands()
                         .addCommands(commands).queue();
         } catch (Exception exception) {
-            exception.printStackTrace();
+            this.logger.warn("Unable to deploy slash-commands.", exception);
         }
     }
 

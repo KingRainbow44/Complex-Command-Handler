@@ -2,9 +2,13 @@ package tech.xigam.cch.utils;
 
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -31,21 +35,27 @@ public final class Interaction {
 
     @Getter
     private final User user;
+
+    /**
+     * This field only applies when registering a user-context command.
+     */
+    @Getter private final User target;
+
     @Getter
     @Nullable
     private final Member member;
     @Getter
     @Nullable
     private final Message message;
-    @Getter
-    private final MessageChannel channel;
+    private final Channel channel;
     @Getter
     @Nullable
     private final Guild guild;
     @Getter
     private final BaseCommand command;
 
-    private SlashCommandInteractionEvent slashExecutor = null;
+    @Getter
+    private GenericCommandInteractionEvent slashExecutor = null;
 
     private boolean sendToDMs = false;
     @Getter private boolean ephemeral = false;
@@ -56,7 +66,7 @@ public final class Interaction {
 
     private final List<ActionRow> actionRows = new ArrayList<>();
 
-    public Interaction(ComplexCommandHandler commandHandler, SlashCommandInteractionEvent event, BaseCommand command) {
+    public Interaction(ComplexCommandHandler commandHandler, GenericCommandInteractionEvent event, BaseCommand command) {
         this.commandHandler = commandHandler;
         this.isSlash = true;
         this.inGuild = event.isFromGuild();
@@ -64,10 +74,21 @@ public final class Interaction {
 
         this.user = event.getUser();
         this.member = event.getMember();
-        this.message = null;
         this.channel = event.getChannel();
         this.guild = event.getGuild();
         this.command = command;
+
+        if (event instanceof MessageContextInteractionEvent messageEvent) {
+            this.message = messageEvent.getTarget();
+        } else {
+            this.message = null;
+        }
+
+        if (event instanceof UserContextInteractionEvent userEvent) {
+            this.target = userEvent.getTarget();
+        } else {
+            this.target = null;
+        }
 
         if (command instanceof Arguments argsCmd) {
             Map<String, OptionType> argumentTypes = Argument.toOptions(
@@ -102,6 +123,7 @@ public final class Interaction {
         this.inGuild = message.isFromGuild();
 
         this.user = message.getAuthor();
+        this.target = null;
         this.member = message.getMember();
         this.message = message;
         this.channel = channel;
@@ -130,7 +152,8 @@ public final class Interaction {
 
                         case INTEGER, NUMBER -> this.arguments.put(argument.reference, Long.parseLong(arguments.get(argument.position)));
                         case BOOLEAN -> this.arguments.put(argument.reference, Boolean.parseBoolean(arguments.get(argument.position)));
-                        case MENTIONABLE, USER -> this.arguments.put(argument.reference, guild.getMemberById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
+                        case MENTIONABLE -> this.arguments.put(argument.reference, guild.getMemberById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
+                        case USER -> this.arguments.put(argument.reference, channel.getJDA().getUserById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
                         case ROLE -> this.arguments.put(argument.reference, guild.getRoleById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
                         case CHANNEL -> this.arguments.put(argument.reference, guild.getGuildChannelById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
                         case ATTACHMENT -> this.arguments.put(argument.reference, message.getAttachments().get(attachmentCount++));
@@ -162,11 +185,6 @@ public final class Interaction {
         return type.cast(this.arguments.getOrDefault(reference, fallback));
     }
 
-    @Nullable
-    public SlashCommandInteractionEvent getSlashExecutor() {
-        return this.slashExecutor;
-    }
-
     public boolean isSlash() {
         return this.isSlash;
     }
@@ -175,12 +193,31 @@ public final class Interaction {
         return this.inGuild;
     }
 
+    /**
+     * Attempts to fetch the channel as a message channel.
+     *
+     * @return The message channel.
+     */
+    public MessageChannel getChannel() {
+        if (this.channel instanceof MessageChannel messageChannel)
+            return messageChannel;
+        throw new IllegalStateException("Cannot get a message channel from a non-message channel!");
+    }
+
+    /**
+     * @return The raw channel.
+     */
+    public Channel getChannelHandle() {
+        return this.channel;
+    }
+
     // ---------- UTILITY METHODS ---------- \\
 
     public void deferReply() {
         if (this.isSlash)
             this.slashExecutor.deferReply(ephemeral).queue();
-        else this.getChannel().sendTyping().queue();
+        else if (this.channel instanceof MessageChannel msgChannel)
+            msgChannel.sendTyping().queue();
 
         this.deferred = true;
     }

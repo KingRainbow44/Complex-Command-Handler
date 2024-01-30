@@ -4,8 +4,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.*;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -33,6 +32,13 @@ public interface BaseCommand {
 
     String getDescription();
 
+    /**
+     * @return The type of command this is.
+     */
+    default net.dv8tion.jda.api.interactions.commands.Command.Type commandType() {
+        return net.dv8tion.jda.api.interactions.commands.Command.Type.SLASH;
+    }
+
     /*
      * Back-end code.
      */
@@ -40,13 +46,11 @@ public interface BaseCommand {
     void execute(Interaction interaction);
 
     void prepareForExecution(List<String> arguments, Message message, Member sender, MessageChannel channel, boolean skipArguments, ComplexCommandHandler handler);
-
-    void prepareForExecution(SlashCommandInteractionEvent event, ComplexCommandHandler handler);
+    void prepareForExecution(GenericCommandInteractionEvent event, ComplexCommandHandler handler);
 
     void prepareForCompletion(CommandAutoCompleteInteractionEvent event, ComplexCommandHandler handler);
 
     void prepareForCallback(String cmdLabel, ButtonInteractionEvent event, ComplexCommandHandler handler);
-
     void prepareForCallback(String cmdLabel, StringSelectInteractionEvent event, ComplexCommandHandler handler);
 
     /**
