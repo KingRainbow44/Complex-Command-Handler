@@ -16,7 +16,7 @@ import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.Nullable;
 import tech.xigam.cch.ComplexCommandHandler;
-import tech.xigam.cch.command.Arguments;
+import tech.xigam.cch.command.modifiers.Arguments;
 import tech.xigam.cch.command.BaseCommand;
 
 import java.util.*;
@@ -89,7 +89,7 @@ public final class Interaction {
             }
         }
     }
-    
+
     public Interaction(
             ComplexCommandHandler commandHandler,
             Message message, MessageChannel channel,
@@ -168,7 +168,7 @@ public final class Interaction {
     public SlashCommandInteractionEvent getSlashExecutor() {
         return this.slashExecutor;
     }
-    
+
     public boolean isSlash() {
         return this.isSlash;
     }
@@ -191,7 +191,7 @@ public final class Interaction {
         if (this.isSlash)
             this.slashExecutor.deferReply(ephemeral).queue();
         else this.getChannel().sendTyping().queue();
-        
+
         this.deferred = true;
     }
 

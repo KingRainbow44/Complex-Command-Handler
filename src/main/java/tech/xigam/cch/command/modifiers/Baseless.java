@@ -1,4 +1,4 @@
-package tech.xigam.cch.command;
+package tech.xigam.cch.command.modifiers;
 
 /**
  * An identification interface.

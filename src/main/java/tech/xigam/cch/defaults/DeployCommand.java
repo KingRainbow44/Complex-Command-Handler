@@ -3,7 +3,7 @@ package tech.xigam.cch.defaults;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.Nullable;
-import tech.xigam.cch.command.Arguments;
+import tech.xigam.cch.command.modifiers.Arguments;
 import tech.xigam.cch.command.Command;
 import tech.xigam.cch.utils.Argument;
 import tech.xigam.cch.utils.Interaction;

@@ -21,11 +21,16 @@ import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import tech.xigam.cch.command.*;
+import tech.xigam.cch.command.modifiers.Arguments;
+import tech.xigam.cch.command.modifiers.Baseless;
+import tech.xigam.cch.command.modifiers.Limited;
+import tech.xigam.cch.command.modifiers.Restricted;
 import tech.xigam.cch.utils.Argument;
 import tech.xigam.cch.utils.Interaction;
 import tech.xigam.cch.utils.InteractiveArguments;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -36,18 +41,19 @@ public final class ComplexCommandHandler extends ListenerAdapter
 {
     private JDA jdaInstance;
     private final boolean usePrefix;
-    
+
     private final Map<String, BaseCommand> commands = new HashMap<>();
     private final Map<String, InteractiveArguments> argumentSessions = new HashMap<>();
 
     private String prefix;
-    
+
     public Consumer<Interaction> onArgumentError = interaction -> {};
-    
+    public BiConsumer<Interaction, Exception> onContextError = (interaction, exception) -> {};
+
     public ComplexCommandHandler(boolean usePrefix) {
         this.usePrefix = usePrefix;
     }
-    
+
     public ComplexCommandHandler setPrefix(String prefix) {
         this.prefix = prefix; return this;
     }
@@ -124,13 +130,13 @@ public final class ComplexCommandHandler extends ListenerAdapter
         argumentSessions.get(memberId)
                 .advance(message);
     }
-    
+
     public void destroyInteraction(InteractiveArguments session) {
         argumentSessions.remove(
                 session.getMember().getId()
         );
     }
-    
+
     /*
      * Event handling.
      */
@@ -141,11 +147,11 @@ public final class ComplexCommandHandler extends ListenerAdapter
 
         if (event.getAuthor().isBot())
             return;
-        
+
         if (!event.getMessage().getContentRaw().startsWith(prefix)) {
             this.checkMessageInteraction(event.getMessage()); return;
         }
-        
+
         String message = event.getMessage().getContentRaw();
         if (message.split(this.prefix).length < 2)
             return;
@@ -164,7 +170,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
         String message = event.getMessage().getContentRaw();
         if (!message.startsWith(prefix))
             return;
-        
+
         if (message.split(this.prefix).length < 2)
             return;
         this.runCommand(
@@ -221,7 +227,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
                     .addCommands().queue();
         }
     }
-    
+
     public void deployAll(@Nullable Guild guild) {
         try {
             Collection<SlashCommandData> commands = new ArrayList<>();
@@ -298,6 +304,16 @@ public final class ComplexCommandHandler extends ListenerAdapter
                     }
                 }
 
+                if (command instanceof Restricted restricted) {
+                    action = action.setDefaultPermissions(restricted.toMemberPermissions());
+                }
+
+                if (command instanceof Limited limited) {
+                    action = action
+                            .setGuildOnly(limited.isGuildOnly())
+                            .setNSFW(limited.isNsfw());
+                }
+
                 commands.add(action);
             });
 
@@ -323,13 +339,13 @@ public final class ComplexCommandHandler extends ListenerAdapter
             guild.updateCommands()
                     .addCommands().queue();
         }
-        
+
         commands.forEach((label, command) -> {
             CommandCreateAction action;
             if (guild == null) {
                 action = jdaInstance.upsertCommand(label, command.getDescription());
             } else action = guild.upsertCommand(label, command.getDescription());
-            
+
             for(SubCommand subCommand : ((Command) command).getSubCommands().values()) {
                 if (command instanceof Baseless) {
                     SubcommandData cmdData = new SubcommandData(subCommand.getLabel(), subCommand.getDescription());
@@ -347,7 +363,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
                 } else {
                     OptionData options = new OptionData(OptionType.STRING, "action", "Execute another sub-command/action of this command.", false);
                     options = options.addChoice(subCommand.getLabel(), subCommand.getLabel());
-                    
+
                     if (subCommand instanceof Arguments) {
                         for(Argument argument : ((Arguments) subCommand).getArguments()) {
                             OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
@@ -358,16 +374,16 @@ public final class ComplexCommandHandler extends ListenerAdapter
                             action = action.addOptions(argumentData);
                         }
                     }
-                    
+
                     action = action.addOptions(options);
                 }
-                
+
                 for(Alias alias : subCommand.getAliases()) {
                     CommandCreateAction subAction;
                     if (guild == null) {
                         subAction = jdaInstance.upsertCommand(alias.getLabel(), alias.getDescription());
                     } else subAction = guild.upsertCommand(alias.getLabel(), alias.getDescription());
-                    
+
                     if (subCommand instanceof Arguments) {
                         for(Argument argument : ((Arguments) subCommand).getArguments()) {
                             OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
@@ -380,7 +396,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
                     }
                 }
             }
-            
+
             if (command instanceof Arguments) {
                 for(Argument argument : ((Arguments) command).getArguments()) {
                     OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
@@ -391,7 +407,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
                     action = action.addOptions(argumentData);
                 }
             }
-            
+
             action.queue();
         });
     }

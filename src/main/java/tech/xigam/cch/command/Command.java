@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import tech.xigam.cch.ComplexCommandHandler;
+import tech.xigam.cch.command.modifiers.*;
 import tech.xigam.cch.utils.*;
 
 import java.util.ArrayList;
@@ -20,14 +21,14 @@ public abstract class Command implements BaseCommand
 {
     private final String label, description;
     private final Map<String, SubCommand> subCommands = new HashMap<>();
-    
+
     private List<String> interactiveArguments = new ArrayList<>();
-    
+
     public Command(String label, String description) {
         this.label = label;
         this.description = description;
     }
-    
+
     public Command(String label, String description, String... argumentQuestions) {
         this.label = label;
         this.description = description;
@@ -38,7 +39,7 @@ public abstract class Command implements BaseCommand
     public String getLabel() {
         return this.label;
     }
-    
+
     @Override
     public String getDescription() {
         return this.description;
@@ -46,6 +47,26 @@ public abstract class Command implements BaseCommand
 
     @Override
     public void prepareForExecution(List<String> arguments, Message message, Member sender, MessageChannel channel, boolean skipArguments, ComplexCommandHandler handler) {
+        // Check if the command can be executed in a guild.
+        if (this instanceof Limited limited && limited.isGuildOnly() && !message.isFromGuild()) {
+            handler.onContextError.accept(
+                    new Interaction(handler, message, channel, arguments, this),
+                    new Exception("This command can only be executed in a guild.")
+            );
+            return;
+        }
+
+        // Check if the executor has permission to execute the command.
+        if (this instanceof Restricted restricted) {
+            if (sender != null && !sender.hasPermission(restricted.getPermissions())) {
+                handler.onContextError.accept(
+                        new Interaction(handler, message, channel, arguments, this),
+                        new Exception("You do not have permission to execute this command.")
+                );
+                return;
+            }
+        }
+
         List<String> args = new ArrayList<>(arguments);
         boolean executeBase = true;
 
@@ -65,15 +86,15 @@ public abstract class Command implements BaseCommand
                 for(Argument argument : ((Arguments) this).getArguments()) {
                     if (argument.required) requiredArguments++;
                 }
-                
+
                 if (args.size() < requiredArguments) {
                     handler.onArgumentError.accept(
                             new Interaction(handler, message, channel, arguments, this)
                     ); return;
                 }
             }
-            
-            if (interactiveArguments.size() == 0 || skipArguments) {
+
+            if (interactiveArguments.isEmpty() || skipArguments) {
                 execute(new Interaction(handler, message, channel, arguments, this));
             } else {
                 new InteractiveArguments(
@@ -85,6 +106,27 @@ public abstract class Command implements BaseCommand
 
     @Override
     public void prepareForExecution(SlashCommandInteractionEvent event, ComplexCommandHandler handler) {
+        // Check if the command can be executed in a guild.
+        if (this instanceof Limited limited && limited.isGuildOnly() && !event.isFromGuild()) {
+            handler.onContextError.accept(
+                    new Interaction(handler, event, this),
+                    new Exception("This command can only be executed in a guild.")
+            );
+            return;
+        }
+
+        // Check if the executor has permission to execute the command.
+        if (this instanceof Restricted restricted) {
+            var member = event.getMember();
+            if (member != null && !member.hasPermission(restricted.getPermissions())) {
+                handler.onContextError.accept(
+                        new Interaction(handler, event, this),
+                        new Exception("You do not have permission to execute this command.")
+                );
+                return;
+            }
+        }
+
         String subCommand = null;
         if (this instanceof Baseless) {
             subCommand = event.getSubcommandName();
