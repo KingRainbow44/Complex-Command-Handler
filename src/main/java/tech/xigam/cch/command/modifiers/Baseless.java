@@ -8,7 +8,7 @@ public interface Baseless {
     /**
      * @return Whether this command is baseless.
      */
-    default boolean baseless() {
+    default boolean isBaseless() {
         return true;
     }
 }

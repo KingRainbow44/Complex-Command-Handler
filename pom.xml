@@ -7,7 +7,7 @@
 
     <groupId>tech.xigam</groupId>
     <artifactId>CCH</artifactId>
-    <version>1.7.0</version>
+    <version>1.7.1</version>
 
     <name>Complex Command Handler</name>
     <description>A really useful and simple command handler for JDA.</description>
@@ -35,6 +35,7 @@
     <!-- 1.6.6 - Add support for JDA v5-alpha.22 & Modal support -->
     <!-- 1.6.7 - Add support for JDA v5-beta.10 & formatting changes. -->
     <!-- 1.7.0 - [BREAKING] Upgrade to JDA v5-beta.20 & add support for new slash-command features. -->
+    <!-- 1.7.1 - Add default for reply mentions & add new way to define commands. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

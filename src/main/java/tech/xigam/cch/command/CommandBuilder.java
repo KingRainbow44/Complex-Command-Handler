@@ -26,7 +26,9 @@ public final class CommandBuilder {
     private Collection<Argument> arguments;
     private Collection<Permission> permissions;
 
-    private boolean guildOnly = false, nsfw = false, baseless = false;
+    private boolean guildOnly = false,
+            nsfw = false,
+            baseless = false;
 
     /**
      * @param arguments The arguments to be used by the command.
@@ -87,7 +89,7 @@ public final class CommandBuilder {
             }
 
             @Override
-            public boolean baseless() {
+            public boolean isBaseless() {
                 return CommandBuilder.this.baseless;
             }
         };
