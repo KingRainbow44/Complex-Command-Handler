@@ -237,7 +237,7 @@ public final class ComplexCommandHandler extends ListenerAdapter
                 SlashCommandData action = Commands.slash(label, command.getDescription());
 
                 for (SubCommand subCommand : ((Command) command).getSubCommands().values()) {
-                    if (command instanceof Baseless) {
+                    if (command instanceof Baseless baseless && baseless.baseless()) {
                         SubcommandData cmdData = new SubcommandData(subCommand.getLabel(), subCommand.getDescription());
                         if (subCommand instanceof Arguments argsCmd) {
                             for (Argument argument : argsCmd.getArguments()) {
