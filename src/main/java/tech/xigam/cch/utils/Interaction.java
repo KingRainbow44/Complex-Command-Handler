@@ -237,11 +237,11 @@ public final class Interaction {
     }
 
     public void reply(String message) {
-        this.reply(message, true);
+        this.reply(message, this.commandHandler.mentionDefault);
     }
 
     public void reply(MessageEmbed embed) {
-        this.reply(embed, true);
+        this.reply(embed, this.commandHandler.mentionDefault);
     }
 
     public void reply(String message, boolean mentionUser) {

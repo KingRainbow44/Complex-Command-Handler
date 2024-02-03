@@ -50,6 +50,8 @@ public final class ComplexCommandHandler extends ListenerAdapter
     public Consumer<Interaction> onArgumentError = interaction -> {};
     public BiConsumer<Interaction, Exception> onContextError = (interaction, exception) -> {};
 
+    public boolean mentionDefault = true;
+
     public ComplexCommandHandler(boolean usePrefix) {
         this.usePrefix = usePrefix;
     }
