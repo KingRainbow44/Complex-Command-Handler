@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -14,18 +13,20 @@ import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.jetbrains.annotations.Nullable;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.command.modifiers.Arguments;
 import tech.xigam.cch.command.BaseCommand;
 
+import java.io.File;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public final class Interaction {
     private final boolean isSlash, inGuild;
+    @Getter
     private final ComplexCommandHandler commandHandler;
 
     @Getter
@@ -46,8 +47,9 @@ public final class Interaction {
 
     private SlashCommandInteractionEvent slashExecutor = null;
 
-    private boolean ephemeral = false, sendToDMs = false;
-    private boolean deferred = false;
+    private boolean sendToDMs = false;
+    @Getter private boolean ephemeral = false;
+    @Getter private boolean deferred = false;
 
     private final Map<String, Object> arguments = new HashMap<>();
     private final List<String> rawArguments = new ArrayList<>();
@@ -72,8 +74,8 @@ public final class Interaction {
                     argsCmd.getArguments().toArray(new Argument[0])
             );
 
-            for (Entry<String, OptionType> entry : argumentTypes.entrySet()) {
-                OptionMapping mapping = event.getOption(entry.getKey());
+            for (var entry : argumentTypes.entrySet()) {
+                var mapping = event.getOption(entry.getKey());
                 if (mapping == null) continue;
 
                 switch (entry.getValue()) {
@@ -142,10 +144,6 @@ public final class Interaction {
 
     // ---------- DATA METHODS ---------- \\
 
-    public ComplexCommandHandler getCommandHandler() {
-        return this.commandHandler;
-    }
-
     @Deprecated(since = "1.6.0")
     public Map<String, Object> getArguments() {
         return this.arguments; // Returns a list of STRING-MAPPED arguments.
@@ -171,14 +169,6 @@ public final class Interaction {
 
     public boolean isSlash() {
         return this.isSlash;
-    }
-
-    public boolean isDeferred() {
-        return this.deferred;
-    }
-
-    public boolean isEphemeral() {
-        return this.ephemeral;
     }
 
     public boolean isFromGuild() {
@@ -231,6 +221,11 @@ public final class Interaction {
         return this;
     }
 
+    public Interaction sendFile(FileUpload... file) {
+        getChannel().sendFiles(file).queue();
+        return this;
+    }
+
     public void modal(Modal modal) {
         if (!this.isSlash()) throw new IllegalStateException("Cannot send a modal to a non-slash command!");
         this.slashExecutor.replyModal(modal).queue();
@@ -242,6 +237,22 @@ public final class Interaction {
 
     public void reply(MessageEmbed embed) {
         this.reply(embed, this.commandHandler.mentionDefault);
+    }
+
+    public void reply(FileUpload... files) {
+        this.send(Arrays.asList(files), false);
+    }
+
+    public void reply(File... files) {
+        var uploads = new ArrayList<FileUpload>();
+        for (var file : files) {
+            uploads.add(FileUpload.fromData(file));
+        }
+        this.send(uploads, false);
+    }
+
+    public void reply(String fileName, byte[] data) {
+        this.send(FileUpload.fromData(data, fileName), false);
     }
 
     public void reply(String message, boolean mentionUser) {
@@ -270,24 +281,36 @@ public final class Interaction {
      * @param message     The message to send.
      * @param mentionUser Whether to mention the user.
      */
+    @SuppressWarnings("unchecked")
     private void send(Object message, boolean mentionUser) {
         if (this.isSlash()) {
             if (this.isDeferred()) {
                 WebhookMessageCreateAction<Message> send;
 
-                if (message instanceof String)
-                    send = this.slashExecutor.getHook().sendMessage((String) message);
-                else send = this.slashExecutor.getHook().sendMessageEmbeds((MessageEmbed) message);
+                if (message instanceof String string) {
+                    send = this.slashExecutor.getHook().sendMessage(string);
+                } else if (message instanceof MessageEmbed embed) {
+                    send = this.slashExecutor.getHook().sendMessageEmbeds(embed);
+                } else if (message instanceof Collection<?> files) {
+                    send = this.slashExecutor.getHook().sendFiles((Collection<FileUpload>) files);
+                } else {
+                    throw new IllegalArgumentException("Invalid message type: " + message.getClass().getName());
+                }
 
                 if (!this.actionRows.isEmpty()) send = send.addComponents(this.actionRows);
                 send.queue();
             } else {
                 ReplyCallbackAction send;
 
-                if (message instanceof String)
-                    send = this.slashExecutor.reply((String) message);
-                else
-                    send = this.slashExecutor.replyEmbeds((MessageEmbed) message);
+                if (message instanceof String string) {
+                    send = this.slashExecutor.reply(string);
+                } else if (message instanceof MessageEmbed embed) {
+                    send = this.slashExecutor.replyEmbeds(embed);
+                } else if (message instanceof Collection<?> files) {
+                    send = this.slashExecutor.replyFiles((Collection<FileUpload>) files);
+                } else {
+                    throw new IllegalArgumentException("Invalid message type: " + message.getClass().getName());
+                }
 
                 if (!this.actionRows.isEmpty()) send = send.addComponents(this.actionRows);
                 send.setEphemeral(this.isEphemeral()).queue();
@@ -297,18 +320,34 @@ public final class Interaction {
                 this.getUser().openPrivateChannel().queue(privateChannel -> {
                     MessageCreateAction send;
 
-                    if (message instanceof String)
-                        send = privateChannel.sendMessage((String) message);
-                    else send = privateChannel.sendMessageEmbeds((MessageEmbed) message);
+                    if (message instanceof String string) {
+                        send = privateChannel.sendMessage(string);
+                    } else if (message instanceof MessageEmbed embed) {
+                        send = privateChannel.sendMessageEmbeds(embed);
+                    } else if (message instanceof Collection<?> files) {
+                        send = privateChannel.sendFiles((Collection<FileUpload>) files);
+                    } else {
+                        throw new IllegalArgumentException("Invalid message type: " + message.getClass().getName());
+                    }
 
                     if (!this.actionRows.isEmpty()) send = send.addComponents(this.actionRows);
                     send.queue();
                 });
             } else {
                 MessageCreateAction send;
-                if (message instanceof String)
-                    send = this.getMessage().reply((String) message);
-                else send = this.getMessage().replyEmbeds((MessageEmbed) message);
+                var replyingTo = this.getMessage();
+                if (replyingTo == null)
+                    throw new IllegalArgumentException("Cannot reply to a null message!");
+
+                if (message instanceof String string) {
+                    send = replyingTo.reply(string);
+                } else if (message instanceof MessageEmbed embed) {
+                    send = replyingTo.replyEmbeds(embed);
+                } else if (message instanceof Collection<?> files) {
+                    send = replyingTo.replyFiles((Collection<FileUpload>) files);
+                } else {
+                    throw new IllegalArgumentException("Invalid message type: " + message.getClass().getName());
+                }
 
                 if (!this.actionRows.isEmpty()) send = send.setComponents(this.actionRows);
                 send.mentionRepliedUser(mentionUser).queue();
