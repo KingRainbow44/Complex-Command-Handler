@@ -252,7 +252,7 @@ public final class Interaction {
     }
 
     public void reply(String fileName, byte[] data) {
-        this.send(FileUpload.fromData(data, fileName), false);
+        this.send(List.of(FileUpload.fromData(data, fileName)), false);
     }
 
     public void reply(String message, boolean mentionUser) {
