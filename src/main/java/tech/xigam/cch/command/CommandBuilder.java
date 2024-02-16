@@ -10,6 +10,8 @@ import tech.xigam.cch.utils.Callback;
 import tech.xigam.cch.utils.Completion;
 import tech.xigam.cch.utils.Interaction;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
@@ -20,6 +22,7 @@ import java.util.function.Consumer;
 public final class CommandBuilder {
     private final String label, description;
 
+    private List<SubCommand> subCommands = new ArrayList<>();
     private Consumer<Interaction> executor;
     private Consumer<Callback> callback;
     private Consumer<Completion> completer;
@@ -29,6 +32,15 @@ public final class CommandBuilder {
     private boolean guildOnly = false,
             nsfw = false,
             baseless = false;
+
+    /**
+     * @param subCommands Any sub-commands to be registered.
+     * @return The builder.
+     */
+    public CommandBuilder subCommand(SubCommand... subCommands) {
+        this.subCommands.addAll(Arrays.asList(subCommands));
+        return this;
+    }
 
     /**
      * @param arguments The arguments to be used by the command.
@@ -52,7 +64,7 @@ public final class CommandBuilder {
      * @return A command.
      */
     public BaseCommand build() {
-        return new SuperCommand(this.label, this.description) {
+        var command = new SuperCommand(this.label, this.description) {
             @Override
             public void execute(Interaction interaction) {
                 executor.accept(interaction);
@@ -93,10 +105,21 @@ public final class CommandBuilder {
                 return CommandBuilder.this.baseless;
             }
         };
+
+        this.subCommands.forEach(command::registerSubCommand);
+
+        return command;
+    }
+
+    /**
+     * @return The command as a sub-command.
+     */
+    public SubCommand asSub() {
+        return (SubCommand) this.build();
     }
 
     private static abstract class SuperCommand
-            extends Command implements Arguments, Restricted, Limited, Completable, Callable, Baseless {
+            extends SubCommand implements Arguments, Restricted, Limited, Completable, Callable, Baseless {
         public SuperCommand(String label, String description) {
             super(label, description);
         }
