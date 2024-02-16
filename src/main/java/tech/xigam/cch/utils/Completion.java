@@ -37,19 +37,19 @@ public final class Completion {
     /**
      * Adds a choice to reply with.
      *
-     * @param mapping This is the value that will be SHOWN to the user.
-     * @param value   This is the value that will be handled internally by CCH.
+     * @param name This is the value that will be SHOWN to the user.
+     * @param value This is the value that will be handled internally by CCH.
      * @return An instance of this completion class.
      */
 
-    public Completion addChoice(String mapping, Object value) {
+    public Completion addChoice(String name, Object value) {
         net.dv8tion.jda.api.interactions.commands.Command.Choice choice;
         if (value instanceof Long || value instanceof Integer) {
-            choice = new net.dv8tion.jda.api.interactions.commands.Command.Choice(mapping, (int) value);
+            choice = new net.dv8tion.jda.api.interactions.commands.Command.Choice(name, (int) value);
         } else if (value instanceof Double) {
-            choice = new net.dv8tion.jda.api.interactions.commands.Command.Choice(mapping, (double) value);
+            choice = new net.dv8tion.jda.api.interactions.commands.Command.Choice(name, (double) value);
         } else {
-            choice = new net.dv8tion.jda.api.interactions.commands.Command.Choice(mapping, value.toString());
+            choice = new net.dv8tion.jda.api.interactions.commands.Command.Choice(name, value.toString());
         }
         this.choices.add(choice);
         return this;
