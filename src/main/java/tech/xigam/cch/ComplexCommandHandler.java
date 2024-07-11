@@ -29,6 +29,7 @@ import tech.xigam.cch.command.modifiers.Restricted;
 import tech.xigam.cch.utils.Argument;
 import tech.xigam.cch.utils.Interaction;
 import tech.xigam.cch.utils.InteractiveArguments;
+import tech.xigam.cch.utils.Parsing;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -61,7 +62,8 @@ public final class ComplexCommandHandler extends ListenerAdapter {
     }
 
     public ComplexCommandHandler setPrefix(String prefix) {
-        this.prefix = prefix; return this;
+        this.prefix = prefix;
+        return this;
     }
 
     public ComplexCommandHandler registerCommand(BaseCommand command) {
@@ -148,8 +150,8 @@ public final class ComplexCommandHandler extends ListenerAdapter {
     public void checkMessageInteraction(Message message) {
         if (message.getMember() == null) return;
 
-        String memberId = message.getMember().getId();
-        String channelId = message.getChannel().getId();
+        var memberId = message.getMember().getId();
+        var channelId = message.getChannel().getId();
         if (!argumentSessions.containsKey(memberId)) return;
         if (!channelId.matches(
                 argumentSessions.get(memberId).getChannel().getId()
@@ -180,7 +182,7 @@ public final class ComplexCommandHandler extends ListenerAdapter {
             this.checkMessageInteraction(event.getMessage()); return;
         }
 
-        String message = event.getMessage().getContentRaw();
+        var message = event.getMessage().getContentRaw();
         if (message.split(this.prefix).length < 2)
             return;
         this.runCommand(
@@ -195,7 +197,7 @@ public final class ComplexCommandHandler extends ListenerAdapter {
         if (event.getAuthor().isBot())
             return;
 
-        String message = event.getMessage().getContentRaw();
+        var message = event.getMessage().getContentRaw();
         if (!message.startsWith(prefix))
             return;
 
@@ -233,7 +235,7 @@ public final class ComplexCommandHandler extends ListenerAdapter {
 
     @Override
     public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
-        String rawReference = event.getComponentId();
+        var rawReference = event.getComponentId();
         if (!rawReference.startsWith("<"))
             return;
 
@@ -243,12 +245,12 @@ public final class ComplexCommandHandler extends ListenerAdapter {
     }
 
     @Override
-    public void onUserContextInteraction(UserContextInteractionEvent event) {
+    public void onUserContextInteraction(@NotNull UserContextInteractionEvent event) {
         this.runCommand(event);
     }
 
     @Override
-    public void onMessageContextInteraction(MessageContextInteractionEvent event) {
+    public void onMessageContextInteraction(@NotNull MessageContextInteractionEvent event) {
         this.runCommand(event);
     }
 
@@ -268,49 +270,30 @@ public final class ComplexCommandHandler extends ListenerAdapter {
 
     public void deployAll(@Nullable Guild guild) {
         try {
-            Collection<CommandData> commands = new ArrayList<>();
+            var commands = new ArrayList<CommandData>();
             this.commands.forEach((label, command) -> {
                 var action = (SlashCommandData) (command.commandType() == SLASH ?
                         Commands.slash(command.getLabel(), command.getDescription()) :
                         Commands.context(command.commandType(), command.getLabel()));
 
-                for (SubCommand subCommand : ((Command) command).getSubCommands().values()) {
+                for (var subCommand : ((Command) command).getSubCommands().values()) {
                     if (command instanceof Baseless baseless && baseless.isBaseless()) {
-                        SubcommandData cmdData = new SubcommandData(subCommand.getLabel(), subCommand.getDescription());
+                        var cmdData = new SubcommandData(subCommand.getLabel(), subCommand.getDescription());
                         if (subCommand instanceof Arguments argsCmd) {
-                            for (Argument argument : argsCmd.getArguments()) {
-                                OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                                if (argument.choices != null && argument.argumentType == OptionType.STRING)
-                                    argumentData.addChoices(Argument.toChoices(argument));
-                                else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
-                                    argumentData.setRequiredRange(argument.min, argument.max);
-                                if (argument.completable)
-                                    argumentData.setAutoComplete(true);
-                                cmdData = cmdData.addOptions(argumentData);
-                            }
+                            var args = Parsing.parse(argsCmd);
+                            cmdData = cmdData.addOptions(args);
                         }
 
                         if (command.commandType() == SLASH) {
                             action = action.addSubcommands(cmdData);
                         }
                     } else {
-                        OptionData options = new OptionData(OptionType.STRING, "action", "Execute another sub-command/action of this command.", false);
-                        options = options.addChoice(subCommand.getLabel(), subCommand.getLabel());
+                        var options = new ArrayList<OptionData>();
+                        options.add(new OptionData(OptionType.STRING, "action", "Execute another sub-command/action of this command.", false)
+                                .addChoice(subCommand.getLabel(), subCommand.getLabel()));
 
                         if (subCommand instanceof Arguments argsCmd) {
-                            for (Argument argument : argsCmd.getArguments()) {
-                                OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                                if (argument.choices != null && argument.argumentType == OptionType.STRING)
-                                    argumentData.addChoices(Argument.toChoices(argument));
-                                else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
-                                    argumentData.setRequiredRange(argument.min, argument.max);
-                                if (argument.completable)
-                                    argumentData.setAutoComplete(true);
-
-                                if (command.commandType() == SLASH) {
-                                    action = action.addOptions(argumentData);
-                                }
-                            }
+                            options.addAll(Parsing.parse(argsCmd));
                         }
 
                         if (command.commandType() == SLASH) {
@@ -318,41 +301,24 @@ public final class ComplexCommandHandler extends ListenerAdapter {
                         }
                     }
 
-                    for (Alias alias : subCommand.getAliases()) {
-                        CommandCreateAction subAction;
-                        if (guild == null) {
-                            subAction = jdaInstance.upsertCommand(alias.getLabel(), alias.getDescription());
-                        } else subAction = guild.upsertCommand(alias.getLabel(), alias.getDescription());
+                    for (var alias : subCommand.getAliases()) {
+                        var subAction = guild == null ?
+                                jdaInstance.upsertCommand(alias.getLabel(), alias.getDescription()) :
+                                guild.upsertCommand(alias.getLabel(), alias.getDescription());
 
                         if (subCommand instanceof Arguments argsCmd) {
-                            for (Argument argument : argsCmd.getArguments()) {
-                                OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                                if (argument.choices != null && argument.argumentType == OptionType.STRING)
-                                    argumentData.addChoices(Argument.toChoices(argument));
-                                else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
-                                    argumentData.setRequiredRange(argument.min, argument.max);
-                                if (argument.completable)
-                                    argumentData.setAutoComplete(true);
-                                subAction = subAction.addOptions(argumentData);
-                            }
+                            var args = Parsing.parse(argsCmd);
+                            subAction = subAction.addOptions(args);
                         }
+
+                        subAction.queue();
                     }
                 }
 
-                if (command instanceof Arguments argsCmd) {
-                    for (Argument argument : argsCmd.getArguments()) {
-                        OptionData argumentData = new OptionData(argument.argumentType, argument.label, argument.description, argument.required);
-                        if (argument.choices != null && argument.argumentType == OptionType.STRING)
-                            argumentData.addChoices(Argument.toChoices(argument));
-                        else if (argument.argumentType == OptionType.INTEGER && argument.min != -1 && argument.max != -1)
-                            argumentData.setRequiredRange(argument.min, argument.max);
-                        if (argument.completable)
-                            argumentData.setAutoComplete(true);
-
-                        if (command.commandType() == SLASH) {
-                            action = action.addOptions(argumentData);
-                        }
-                    }
+                if (command.commandType() == SLASH &&
+                        command instanceof Arguments argsCmd) {
+                    var args = Parsing.parse(argsCmd);
+                    action = action.addOptions(args);
                 }
 
                 if (command instanceof Restricted restricted) {
