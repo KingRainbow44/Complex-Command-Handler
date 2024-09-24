@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.*;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.Command.Type;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
@@ -35,8 +36,8 @@ public interface BaseCommand {
     /**
      * @return The type of command this is.
      */
-    default net.dv8tion.jda.api.interactions.commands.Command.Type commandType() {
-        return net.dv8tion.jda.api.interactions.commands.Command.Type.SLASH;
+    default Type commandType() {
+        return Type.SLASH;
     }
 
     /*

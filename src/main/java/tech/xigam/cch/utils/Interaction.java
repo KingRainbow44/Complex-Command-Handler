@@ -247,7 +247,6 @@ public final class Interaction {
 
     // ---------- REPLY METHODS ---------- \\
 
-
     public Interaction sendMessage(String message) {
         getChannel().sendMessage(message).queue();
         return this;

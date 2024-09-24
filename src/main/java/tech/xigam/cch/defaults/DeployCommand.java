@@ -25,7 +25,7 @@ public abstract class DeployCommand extends Command implements Arguments {
 
     @Override
     public void execute(Interaction interaction) {
-        if (!permissionCheck(interaction)) {
+        if (!this.permissionCheck(interaction)) {
             interaction.reply("You don't have permission to deploy commands.");
             return;
         }

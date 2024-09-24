@@ -10,6 +10,17 @@ import java.util.Map;
 @Accessors(fluent = true, chain = true)
 public final class Argument
 {
+    /**
+     * Creates a basic argument.
+     *
+     * @param label The label displayed to the user.
+     * @param description The description displayed to the user.
+     * @param reference The internal key for referencing the argument's value.
+     * @param type The argument's type.
+     * @param required Whether the argument is required.
+     * @param positionInArguments The position of the argument in a prefix-based command.
+     * @return The argument.
+     */
     public static Argument create(
             String label, String description,
             String reference, OptionType type, boolean required,
@@ -18,6 +29,19 @@ public final class Argument
         return new Argument(label, description, reference, type, required, positionInArguments);
     }
 
+    /**
+     * Creates an argument with choices.
+     * Choices are shown to the user when they are prompted for the argument.
+     *
+     * @param label The label displayed to the user.
+     * @param description The description displayed to the user.
+     * @param reference The internal key for referencing the argument's value.
+     * @param type The argument's type.
+     * @param required Whether the argument is required.
+     * @param positionInArguments The position of the argument in a prefix-based command.
+     * @param choices The choices for the argument.
+     * @return The argument.
+     */
     public static Argument createWithChoices(
             String label, String description,
             String reference, OptionType type, boolean required,
@@ -28,6 +52,19 @@ public final class Argument
         return argument;
     }
 
+    /**
+     * Creates a trailing argument.
+     * A trailing argument is one which takes up the rest of the command.
+     * The differences only applies to prefix-based commands.
+     *
+     * @param label The label displayed to the user.
+     * @param description The description displayed to the user.
+     * @param reference The internal key for referencing the argument's value.
+     * @param type The argument's type.
+     * @param required Whether the argument is required.
+     * @param positionInArguments The position of the argument in a prefix-based command.
+     * @return The argument.
+     */
     public static Argument createTrailingArgument(
             String label, String description,
             String reference, OptionType type, boolean required,
