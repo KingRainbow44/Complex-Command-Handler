@@ -1,5 +1,7 @@
 package tech.xigam.cch.command.modifiers;
 
+import net.dv8tion.jda.api.interactions.InteractionContextType;
+
 /**
  * Declares a command as limited, allowing you to change:
  * - if it is shown to underage users
@@ -8,7 +10,9 @@ package tech.xigam.cch.command.modifiers;
 public interface Limited {
     /**
      * @return Whether the command is only accessible in guilds.
+     * @deprecated Use {@link tech.xigam.cch.command.Command#setContext(InteractionContextType...)} instead.
      */
+    @Deprecated
     default boolean isGuildOnly() {
         return false;
     }

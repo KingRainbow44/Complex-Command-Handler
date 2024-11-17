@@ -4,7 +4,6 @@ import lombok.Getter;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.command.BaseCommand;
 
@@ -41,16 +40,19 @@ public final class InteractiveArguments {
         if (index.containsKey(member.getId())) return;
         index.put(member.getId(), 0);
 
-        replyTo.reply(
-                questions.get(index.get(member.getId()))
-        ).queue();
+        replyTo
+                .reply(
+                        questions.get(index.get(member.getId()))
+                )
+                .queue();
     }
 
     public void advance(Message response) {
         this.answers.put(
                 index.get(this.member.getId()),
                 response.getContentRaw()
-        ); index.put(this.member.getId(), index.get(this.member.getId()) + 1);
+        );
+        index.put(this.member.getId(), index.get(this.member.getId()) + 1);
 
         if ((index.get(this.member.getId()) + 1) > this.questions.size()) {
             this.handler.destroyInteraction(this);

@@ -5,13 +5,14 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.utils.Interaction;
 
 import java.util.List;
+import java.util.Set;
 
 public record Alias(String label, Command aliasOf) implements BaseCommand {
     @Override
@@ -22,6 +23,11 @@ public record Alias(String label, Command aliasOf) implements BaseCommand {
     @Override
     public String getDescription() {
         return this.aliasOf.getDescription();
+    }
+
+    @Override
+    public Set<InteractionContextType> getContext() {
+        return this.aliasOf.getContext();
     }
 
     @Override

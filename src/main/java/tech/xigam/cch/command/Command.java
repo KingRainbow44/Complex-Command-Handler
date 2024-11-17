@@ -1,22 +1,22 @@
 package tech.xigam.cch.command;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Tolerate;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import tech.xigam.cch.ComplexCommandHandler;
 import tech.xigam.cch.command.modifiers.*;
 import tech.xigam.cch.utils.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class Command implements BaseCommand
 {
@@ -24,6 +24,13 @@ public abstract class Command implements BaseCommand
     private final Map<String, SubCommand> subCommands = new HashMap<>();
 
     private List<String> interactiveArguments = new ArrayList<>();
+
+    /**
+     * Added with CCH 1.9.0
+     * This controls where the command can be accessed.
+     */
+    @Setter @Getter
+    private Set<InteractionContextType> context = Set.of(InteractionContextType.GUILD);
 
     public Command(String label, String description) {
         this.label = label;
@@ -34,6 +41,21 @@ public abstract class Command implements BaseCommand
         this.label = label;
         this.description = description;
         this.interactiveArguments = List.of(argumentQuestions);
+    }
+
+    /**
+     * Overloaded constructor for changing the interaction context.
+     * Interactive arguments do not work with interactions.
+     * Added in CCH 1.9.0
+     *
+     * @param label The command label.
+     * @param description The command description.
+     * @param context The interaction context.
+     */
+    public Command(String label, String description, InteractionContextType... context) {
+        this(label, description);
+
+        this.setContext(context);
     }
 
     @Override
@@ -49,7 +71,9 @@ public abstract class Command implements BaseCommand
     @Override
     public void prepareForExecution(List<String> arguments, Message message, Member sender, MessageChannel channel, boolean skipArguments, ComplexCommandHandler handler) {
         // Check if the command can be executed in a guild.
-        if (this instanceof Limited limited && limited.isGuildOnly() && !message.isFromGuild()) {
+        if (this instanceof Limited limited &&
+                (limited.isGuildOnly() || Validation.isOnly(this.getContext(), InteractionContextType.GUILD)) &&
+                !message.isFromGuild()) {
             handler.onContextError.accept(
                     new Interaction(handler, message, channel, arguments, this),
                     new Exception("This command can only be executed in a guild.")
@@ -108,7 +132,9 @@ public abstract class Command implements BaseCommand
     @Override
     public void prepareForExecution(GenericCommandInteractionEvent event, ComplexCommandHandler handler) {
         // Check if the command can be executed in a guild.
-        if (this instanceof Limited limited && limited.isGuildOnly() && !event.isFromGuild()) {
+        if (this instanceof Limited limited &&
+                (limited.isGuildOnly() || Validation.isOnly(this.getContext(), InteractionContextType.GUILD)) &&
+                !event.isFromGuild()) {
             handler.onContextError.accept(
                     new Interaction(handler, event, this),
                     new Exception("This command can only be executed in a guild.")
@@ -170,8 +196,9 @@ public abstract class Command implements BaseCommand
             }
         }
 
-        if (this instanceof Completable completable)
+        if (this instanceof Completable completable) {
             completable.complete(new Completion(event));
+        }
     }
 
     @Override
@@ -210,5 +237,16 @@ public abstract class Command implements BaseCommand
 
     private SubCommand getSubCommand(String label) {
         return subCommands.get(label);
+    }
+
+    /**
+     * Sets the context of a command.
+     * This is used for singular commands.
+     *
+     * @param context The context of the command.
+     */
+    @Tolerate
+    public void setContext(InteractionContextType... context) {
+        this.context = Set.of(context);
     }
 }

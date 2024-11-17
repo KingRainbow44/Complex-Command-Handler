@@ -16,8 +16,20 @@ public abstract class DeployCommand extends Command implements Arguments {
         super("deploy", "Deploys all registered commands to your guild or globally.");
     }
 
+    /**
+     * This method is called to check if the user has permission to deploy commands.
+     *
+     * @param interaction The interaction that triggered the command.
+     * @return Whether the user has permission to deploy commands.
+     */
     protected abstract boolean permissionCheck(Interaction interaction);
 
+    /**
+     * By overriding this method, you can control whether to use an embed to send response messages.
+     *
+     * @param text The text to embedify.
+     * @return The embed, or null if no embed should be used.
+     */
     @Nullable
     protected MessageEmbed embedify(String text) {
         return null;
@@ -57,8 +69,8 @@ public abstract class DeployCommand extends Command implements Arguments {
     @Override
     public Collection<Argument> getArguments() {
         return List.of(
-                Argument.createWithChoices("global", "Should the commands be deployed globally?", "global", OptionType.BOOLEAN, true, 0),
-                Argument.createWithChoices("delete", "Should commands be deleted instead of upserted?", "delete", OptionType.BOOLEAN, false, 1)
+                Argument.createWithChoices("global", "Should the commands be deployed globally?", "global", OptionType.BOOLEAN, false, 0),
+                Argument.createWithChoices("delete", "Should commands be deleted instead of deployed?", "delete", OptionType.BOOLEAN, false, 1)
         );
     }
 }

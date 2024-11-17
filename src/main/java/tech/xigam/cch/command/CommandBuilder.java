@@ -4,16 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import tech.xigam.cch.command.modifiers.*;
 import tech.xigam.cch.utils.Argument;
 import tech.xigam.cch.utils.Callback;
 import tech.xigam.cch.utils.Completion;
 import tech.xigam.cch.utils.Interaction;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Setter
@@ -22,16 +20,36 @@ import java.util.function.Consumer;
 public final class CommandBuilder {
     private final String label, description;
 
-    private List<SubCommand> subCommands = new ArrayList<>();
-    private Consumer<Interaction> executor;
-    private Consumer<Callback> callback;
-    private Consumer<Completion> completer;
-    private Collection<Argument> arguments;
-    private Collection<Permission> permissions;
+    private Set<InteractionContextType> context = new HashSet<>() {{
+        this.add(InteractionContextType.GUILD);
+    }};
 
-    private boolean guildOnly = false,
-            nsfw = false,
-            baseless = false;
+    private List<SubCommand> subCommands = new ArrayList<>();
+    private Consumer<Interaction> executor = interaction -> {};
+    private Consumer<Callback> callback = callback -> {};
+    private Consumer<Completion> completer = completion -> {};
+    private Collection<Argument> arguments = new HashSet<>();
+    private Collection<Permission> permissions = new HashSet<>();
+
+    private boolean nsfw = false, baseless = false;
+
+    /**
+     * @param context The context of the command.
+     * @return The builder.
+     */
+    public CommandBuilder context(Set<InteractionContextType> context) {
+        this.context = context;
+        return this;
+    }
+
+    /**
+     * @param context The context of the command.
+     * @return The builder.
+     */
+    public CommandBuilder context(InteractionContextType... context) {
+        this.context = Set.of(context);
+        return this;
+    }
 
     /**
      * @param subCommands Any sub-commands to be registered.
@@ -58,6 +76,15 @@ public final class CommandBuilder {
     public CommandBuilder permissions(Permission... permissions) {
         this.permissions = List.of(permissions);
         return this;
+    }
+
+    /**
+     * Placeholder method for 'setGuildOnly'.
+     * @deprecated This method will be removed. Please use {@link #context(InteractionContextType...)} instead.
+     */
+    @Deprecated(forRemoval = true, since = "1.9.0")
+    public CommandBuilder setGuildOnly(boolean value) {
+        throw new IllegalArgumentException("Use CommandBuilder#context(InteractionContextType...) instead.");
     }
 
     /**
@@ -96,15 +123,12 @@ public final class CommandBuilder {
             }
 
             @Override
-            public boolean isGuildOnly() {
-                return CommandBuilder.this.guildOnly;
-            }
-
-            @Override
             public boolean isBaseless() {
                 return CommandBuilder.this.baseless;
             }
         };
+
+        command.setContext(this.context);
 
         this.subCommands.forEach(command::registerSubCommand);
 

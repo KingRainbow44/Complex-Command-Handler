@@ -1,13 +1,14 @@
 package tech.xigam.cch.utils;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.entities.detached.IDetachableEntity;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
@@ -28,6 +29,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+@Slf4j
 public final class Interaction {
     private final boolean isSlash, inGuild;
     @Getter
@@ -44,13 +46,18 @@ public final class Interaction {
     @Getter
     @Nullable
     private final Member member;
+
     @Getter
     @Nullable
     private final Message message;
+
+    @Nullable
     private final Channel channel;
+
     @Getter
     @Nullable
     private final Guild guild;
+
     @Getter
     private final BaseCommand command;
 
@@ -101,7 +108,8 @@ public final class Interaction {
 
                 switch (entry.getValue()) {
                     case STRING -> this.arguments.put(entry.getKey(), mapping.getAsString());
-                    case INTEGER, NUMBER -> this.arguments.put(entry.getKey(), mapping.getAsLong());
+                    case INTEGER -> this.arguments.put(entry.getKey(), mapping.getAsLong());
+                    case NUMBER -> this.arguments.put(entry.getKey(), mapping.getAsDouble());
                     case BOOLEAN -> this.arguments.put(entry.getKey(), mapping.getAsBoolean());
                     case MENTIONABLE -> this.arguments.put(entry.getKey(), mapping.getAsMentionable());
                     case USER -> this.arguments.put(entry.getKey(), mapping.getAsMember());
@@ -129,9 +137,11 @@ public final class Interaction {
         this.channel = channel;
         this.command = command;
 
-        if (channel instanceof GuildChannel guildChannel)
+        if (channel instanceof GuildChannel guildChannel) {
             this.guild = guildChannel.getGuild();
-        else this.guild = null;
+        } else {
+            this.guild = null;
+        }
 
         if (command instanceof Arguments argsCmd) {
             Argument[] args = argsCmd.getArguments().toArray(new Argument[0]);
@@ -148,15 +158,33 @@ public final class Interaction {
                     }
 
                     switch (argument.argumentType) {
-                        default -> this.arguments.put(argument.reference, arguments.get(argument.position));
-
-                        case INTEGER, NUMBER -> this.arguments.put(argument.reference, Long.parseLong(arguments.get(argument.position)));
+                        case INTEGER -> this.arguments.put(argument.reference, Long.parseLong(arguments.get(argument.position)));
+                        case NUMBER -> this.arguments.put(argument.reference, Double.parseDouble(arguments.get(argument.position)));
                         case BOOLEAN -> this.arguments.put(argument.reference, Boolean.parseBoolean(arguments.get(argument.position)));
-                        case MENTIONABLE -> this.arguments.put(argument.reference, guild.getMemberById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
+                        case MENTIONABLE -> {
+                            if (this.guild == null) {
+                                log.warn("Cannot parse mentionable argument without a guild.");
+                                continue;
+                            }
+                            this.arguments.put(argument.reference, guild.getMemberById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
+                        }
                         case USER -> this.arguments.put(argument.reference, channel.getJDA().getUserById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
-                        case ROLE -> this.arguments.put(argument.reference, guild.getRoleById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
-                        case CHANNEL -> this.arguments.put(argument.reference, guild.getGuildChannelById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
+                        case ROLE -> {
+                            if (this.guild == null) {
+                                log.warn("Cannot parse role argument without a guild.");
+                                continue;
+                            }
+                            this.arguments.put(argument.reference, guild.getRoleById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
+                        }
+                        case CHANNEL -> {
+                            if (this.guild == null) {
+                                log.warn("Cannot parse channel argument without a guild.");
+                                continue;
+                            }
+                            this.arguments.put(argument.reference, guild.getGuildChannelById(arguments.get(argument.position).replaceAll("[^0-9]", "")));
+                        }
                         case ATTACHMENT -> this.arguments.put(argument.reference, message.getAttachments().get(attachmentCount++));
+                        default -> this.arguments.put(argument.reference, arguments.get(argument.position));
                     }
                 }
             } catch (IndexOutOfBoundsException ignored) {
@@ -209,6 +237,30 @@ public final class Interaction {
      */
     public Channel getChannelHandle() {
         return this.channel;
+    }
+
+    /**
+     * See {@link IDetachableEntity#isDetached()}.
+     * @return The detachment state of the channel.
+     */
+    public boolean isChannelDetached() {
+        return this.channel != null && this.channel.isDetached();
+    }
+
+    /**
+     * See {@link IDetachableEntity#isDetached()}.
+     * @return The detachment state of the guild.
+     */
+    public boolean isGuildDetached() {
+        return this.guild != null && this.guild.isDetached();
+    }
+
+    /**
+     * See {@link IDetachableEntity#isDetached()}.
+     * @return The detachment state of the member.
+     */
+    public boolean isMemberDetached() {
+        return this.member != null && this.member.isDetached();
     }
 
     // ---------- UTILITY METHODS ---------- \\

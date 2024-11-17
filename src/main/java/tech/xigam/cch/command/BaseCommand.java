@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.*;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.Command.Type;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
@@ -18,6 +19,7 @@ import tech.xigam.cch.utils.MenuOption;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static tech.xigam.cch.utils.Validation.isUrl;
 
@@ -32,6 +34,11 @@ public interface BaseCommand {
     String getLabel();
 
     String getDescription();
+
+    /**
+     * @return Acceptable command contexts.
+     */
+    Set<InteractionContextType> getContext();
 
     /**
      * @return The type of command this is.

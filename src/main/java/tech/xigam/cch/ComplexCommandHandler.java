@@ -1,5 +1,6 @@
 package tech.xigam.cch;
 
+import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -14,6 +15,8 @@ import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionE
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.IntegrationType;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.*;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
@@ -41,9 +44,8 @@ import static net.dv8tion.jda.api.interactions.commands.Command.Type.*;
  * The main command handler.
  * Should be initialized on build.
  */
+@Slf4j
 public final class ComplexCommandHandler extends ListenerAdapter {
-    private final Logger logger = LoggerFactory.getLogger("CCH");
-
     private JDA jdaInstance;
     private final boolean usePrefix;
 
@@ -268,10 +270,18 @@ public final class ComplexCommandHandler extends ListenerAdapter {
         }
     }
 
+    /**
+     * Deploys all slash commands.
+     *
+     * @param guild The guild (if applicable) to deploy commands to.
+     */
+    @SuppressWarnings("deprecation")
     public void deployAll(@Nullable Guild guild) {
         try {
             var commands = new ArrayList<CommandData>();
             this.commands.forEach((label, command) -> {
+                var context = new HashSet<>(command.getContext());
+
                 var action = (SlashCommandData) (command.commandType() == SLASH ?
                         Commands.slash(command.getLabel(), command.getDescription()) :
                         Commands.context(command.commandType(), command.getLabel()));
@@ -326,29 +336,54 @@ public final class ComplexCommandHandler extends ListenerAdapter {
                 }
 
                 if (command instanceof Limited limited) {
-                    action = action
-                            .setGuildOnly(limited.isGuildOnly())
-                            .setNSFW(limited.isNsfw());
+                    // Support for deprecated setting 'isGuildOnly'.
+                    if (limited.isGuildOnly()) {
+                        context.add(InteractionContextType.GUILD);
+                    }
+
+                    action = action.setNSFW(limited.isNsfw());
                 }
+
+                // From contexts, resolve integrations.
+                var integrations = new HashSet<IntegrationType>();
+                context.forEach(ctx -> {
+                    switch (ctx) {
+                        case GUILD -> integrations.add(IntegrationType.GUILD_INSTALL);
+                        case PRIVATE_CHANNEL -> integrations.add(IntegrationType.USER_INSTALL);
+                    }
+                });
+
+                action = action
+                        .setContexts(context)
+                        .setIntegrationTypes(integrations);
+
+                System.out.println("Context for command: " + context);
+                System.out.println("Integration types for command: " + integrations);
 
                 commands.add(action);
             });
 
             if (guild == null)
-                jdaInstance.updateCommands()
-                        .addCommands(commands).queue();
+                jdaInstance
+                        .updateCommands()
+                        .addCommands(commands)
+                        .queue();
             else
-                guild.updateCommands()
-                        .addCommands(commands).queue();
+                guild
+                        .updateCommands()
+                        .addCommands(commands)
+                        .queue();
         } catch (Exception exception) {
-            this.logger.warn("Unable to deploy slash-commands.", exception);
+            log.warn("Unable to deploy slash-commands.", exception);
         }
     }
 
     /**
      * Downsert, then upsert commands.
+     * @deprecated Use {@link #deployAll(Guild)} instead.
      */
-    @Deprecated public void deploy(@Nullable Guild guild) {
+    @Deprecated
+    public void deploy(@Nullable Guild guild) {
         if (guild == null) {
             jdaInstance.updateCommands()
                     .addCommands().queue();
