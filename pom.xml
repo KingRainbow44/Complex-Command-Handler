@@ -7,7 +7,7 @@
 
     <groupId>tech.xigam</groupId>
     <artifactId>CCH</artifactId>
-    <version>1.8.0</version>
+    <version>1.9.0-SNAPSHOT</version>
 
     <name>Complex Command Handler</name>
     <description>A really useful and simple command handler for JDA.</description>
@@ -38,6 +38,7 @@
     <!-- 1.7.1 - Add default for reply mentions & add new way to define commands. -->
     <!-- 1.7.2 - Add replying with files. -->
     <!-- 1.8.0 - [BREAKING] Add support for context-based commands. -->
+    <!-- 1.9.0 - [BREAKING] Add support for user-installable bots. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -65,11 +66,18 @@
         <url>https://github.com/KingRainbow44/Complex-Command-Handler/tree/main</url>
     </scm>
 
+    <repositories>
+        <repository>
+            <id>jitpack</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
-            <groupId>net.dv8tion</groupId>
+            <groupId>io.github.freya022</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0</version>
+            <version>e88cfadcb8</version>
             <scope>provided</scope>
         </dependency>
 
