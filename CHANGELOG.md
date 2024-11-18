@@ -12,3 +12,10 @@
 
 - fix: Remove debug logging when deploying commands
 - feat: Add `Callback#getUser()` and `Callback#getContext()` for determining how to reply to interaction callbacks
+
+## Version 1.9.2
+
+- feat: Added multiple consumers in `ComplexCommandHandler` for handling exceptions
+  - `ComplexCommandHandler#onExecutionError`
+  - `ComplexCommandHandler#onCompletionError`
+  - `ComplexCommandHandler#onCallbackError`
