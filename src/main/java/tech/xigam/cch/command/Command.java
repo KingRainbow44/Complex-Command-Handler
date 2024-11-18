@@ -92,35 +92,40 @@ public abstract class Command implements BaseCommand
             }
         }
 
-        List<String> args = new ArrayList<>(arguments);
+        var args = new ArrayList<>(arguments);
         boolean executeBase = true;
 
-        for (String argument : arguments) {
+        for (var argument : arguments) {
             if (!subCommands.containsKey(argument))
                 continue;
 
             executeBase = false;
             args.remove(argument);
-            getSubCommand(argument)
+            this.getSubCommand(argument)
                     .prepareForExecution(args, message, sender, channel, false, handler);
         }
 
         if (executeBase) {
-            if (this instanceof Arguments) {
-                int requiredArguments = 0;
-                for(Argument argument : ((Arguments) this).getArguments()) {
+            if (this instanceof Arguments thisArguments) {
+                var requiredArguments = 0;
+                for (var argument : thisArguments.getArguments()) {
                     if (argument.required) requiredArguments++;
                 }
 
                 if (args.size() < requiredArguments) {
                     handler.onArgumentError.accept(
                             new Interaction(handler, message, channel, arguments, this)
-                    ); return;
+                    );
+
+                    return;
                 }
             }
 
-            if (interactiveArguments.isEmpty() || skipArguments) {
-                execute(new Interaction(handler, message, channel, arguments, this));
+            var interaction = new Interaction(handler, message, channel, arguments, this);
+            if (interactiveArguments.isEmpty() || skipArguments) try {
+                this.execute(interaction);
+            } catch (Throwable throwable) {
+                handler.onExecutionError.accept(interaction, throwable);
             } else {
                 new InteractiveArguments(
                         message, sender, this, interactiveArguments, handler
@@ -158,21 +163,33 @@ public abstract class Command implements BaseCommand
         if (this instanceof Baseless) {
             subCommand = event.getSubcommandName();
         } else {
-            OptionMapping option = event.getOption("action");
+            var option = event.getOption("action");
             if (option != null) {
                 subCommand = option.getAsString();
             }
         }
 
+        // Create the primary interaction.
+        var executor = this;
+        var interaction = new Interaction(handler, event, this);
+
+        // Check if we have a sub-command.
         if (subCommand != null) {
             if (subCommands.containsKey(subCommand)) {
-                getSubCommand(subCommand)
-                        .execute(new Interaction(handler, event, getSubCommand(subCommand)));
-                return;
+                // Fetch the command and override the primary interaction.
+                executor = getSubCommand(subCommand);
+                interaction = new Interaction(handler, event, executor);
             }
         }
 
-        execute(new Interaction(handler, event, this));
+        try {
+            executor.execute(interaction);
+        } catch (Throwable throwable) {
+            handler.onExecutionError.accept(
+                    new Interaction(handler, event, this),
+                    throwable
+            );
+        }
     }
 
     @Override
@@ -187,44 +204,71 @@ public abstract class Command implements BaseCommand
             }
         }
 
+        Completable completable = null;
         if (subCommand != null) {
             if (subCommands.containsKey(subCommand)) {
-                var subCmd = getSubCommand(subCommand);
-                if (subCmd instanceof Completable completable)
-                    completable.complete(new Completion(event));
-                return;
+                var subCmd = this.getSubCommand(subCommand);
+                if (subCmd instanceof Completable subCompletable) {
+                    completable = subCompletable;
+                }
             }
+        } else if (this instanceof Completable thisCompletable) {
+            completable = thisCompletable;
         }
 
-        if (this instanceof Completable completable) {
-            completable.complete(new Completion(event));
+        if (completable == null) return;
+
+        var completion = new Completion(event);
+        try {
+            completable.complete(completion);
+        } catch (Throwable throwable) {
+            handler.onCompletionError.accept(completion, throwable);
         }
     }
 
     @Override
     public void prepareForCallback(String cmdLabel, ButtonInteractionEvent event, ComplexCommandHandler handler) {
+        var callback = new Callback(event);
+        var callable = this instanceof Callable thisCallable ? thisCallable : null;
+
         if (subCommands.containsKey(cmdLabel)) {
             var subCmd = this.getSubCommand(cmdLabel);
-            if (subCmd instanceof Callable callable)
-                callable.callback(new Callback(event));
-            return;
+            if (subCmd instanceof Callable subCallable) {
+                callable = subCallable;
+            }
         }
 
-        if (this instanceof Callable callable)
-            callable.callback(new Callback(event));
+        this.doCallback(callable, callback, handler);
     }
 
     @Override
     public void prepareForCallback(String cmdLabel, StringSelectInteractionEvent event, ComplexCommandHandler handler) {
+        var callback = new Callback(event);
+        var callable = this instanceof Callable thisCallable ? thisCallable : null;
+
         if (subCommands.containsKey(cmdLabel)) {
             var subCmd = this.getSubCommand(cmdLabel);
-            if (subCmd instanceof Callable callable)
-                callable.callback(new Callback(event));
-            return;
+            if (subCmd instanceof Callable subCallable) {
+                callable = subCallable;
+            }
         }
 
-        if (this instanceof Callable callable)
-            callable.callback(new Callback(event));
+        this.doCallback(callable, callback, handler);
+    }
+
+    /**
+     * Performs a safe callback.
+     *
+     * @param callable The callable.
+     * @param callback The callback.
+     * @param handler The handler.
+     */
+    private void doCallback(Callable callable, Callback callback, ComplexCommandHandler handler) {
+        try {
+            callable.callback(callback);
+        } catch (Throwable throwable) {
+            handler.onCallbackError.accept(callback, throwable);
+        }
     }
 
     public final Map<String, SubCommand> getSubCommands() {

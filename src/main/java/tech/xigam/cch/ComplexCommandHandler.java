@@ -29,10 +29,7 @@ import tech.xigam.cch.command.modifiers.Arguments;
 import tech.xigam.cch.command.modifiers.Baseless;
 import tech.xigam.cch.command.modifiers.Limited;
 import tech.xigam.cch.command.modifiers.Restricted;
-import tech.xigam.cch.utils.Argument;
-import tech.xigam.cch.utils.Interaction;
-import tech.xigam.cch.utils.InteractiveArguments;
-import tech.xigam.cch.utils.Parsing;
+import tech.xigam.cch.utils.*;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -56,6 +53,10 @@ public final class ComplexCommandHandler extends ListenerAdapter {
 
     public Consumer<Interaction> onArgumentError = interaction -> {};
     public BiConsumer<Interaction, Exception> onContextError = (interaction, exception) -> {};
+
+    public BiConsumer<Interaction, Throwable> onExecutionError = (interaction, throwable) -> {};
+    public BiConsumer<Completion, Throwable> onCompletionError = (interaction, throwable) -> {};
+    public BiConsumer<Callback, Throwable> onCallbackError = (interaction, throwable) -> {};
 
     public boolean mentionDefault = true;
 
