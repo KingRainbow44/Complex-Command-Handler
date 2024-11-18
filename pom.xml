@@ -7,7 +7,7 @@
 
     <groupId>tech.xigam</groupId>
     <artifactId>CCH</artifactId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.9.1-SNAPSHOT</version>
 
     <name>Complex Command Handler</name>
     <description>A really useful and simple command handler for JDA.</description>
@@ -39,6 +39,7 @@
     <!-- 1.7.2 - Add replying with files. -->
     <!-- 1.8.0 - [BREAKING] Add support for context-based commands. -->
     <!-- 1.9.0 - [BREAKING] Add support for user-installable bots. -->
+    <!-- 1.9.1 - Allow buttons to work in user-installable apps. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
