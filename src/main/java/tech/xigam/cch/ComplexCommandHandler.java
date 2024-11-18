@@ -357,9 +357,6 @@ public final class ComplexCommandHandler extends ListenerAdapter {
                         .setContexts(context)
                         .setIntegrationTypes(integrations);
 
-                System.out.println("Context for command: " + context);
-                System.out.println("Integration types for command: " + integrations);
-
                 commands.add(action);
             });
 
