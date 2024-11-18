@@ -1,14 +1,18 @@
 package tech.xigam.cch.utils;
 
+import lombok.Getter;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -18,9 +22,28 @@ import java.util.List;
  * A callback for buttons and forms.
  */
 public final class Callback {
+    @Getter
     private final String reference;
+
+    /**
+     * This is the user who pressed the button.
+     * This will always be non-null.
+     */
+    @Getter
+    @NotNull
+    private final User user;
+
+    /**
+     * This is the guild member who pressed the button.
+     * It will only be non-null if the button was pressed in a guild.
+     */
     @Nullable
     private final Member member;
+
+    /**
+     * This is the context in which the user pressed the button.
+     */
+    @Getter private final InteractionContextType context;
 
     private final GenericComponentInteractionCreateEvent interactionExecutor;
 
@@ -30,23 +53,24 @@ public final class Callback {
     public Callback(ButtonInteractionEvent event) {
         this.interactionExecutor = event;
         this.member = event.getMember();
+        this.user = event.getUser();
 
         var rawReference = event.getComponentId();
         this.reference = rawReference.split(">")[1];
+
+        this.context = event.getContext();
     }
 
     public Callback(StringSelectInteractionEvent event) {
         this.interactionExecutor = event;
         this.member = event.getMember();
+        this.user = event.getUser();
 
         var rawReference = event.getComponentId();
         this.reference = rawReference.split(">")[1];
 
+        this.context = event.getContext();
         this.selected = event.getSelectedOptions().stream().map(SelectOption::getValue).toList();
-    }
-
-    public String getReference() {
-        return this.reference;
     }
 
     /**
