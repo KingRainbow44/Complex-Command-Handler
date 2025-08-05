@@ -2,16 +2,20 @@ package tech.xigam.cch.utils;
 
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionContextType;
+import net.dv8tion.jda.api.interactions.components.ActionComponent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.MessageEditCallbackAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,6 +53,8 @@ public final class Callback {
 
     private Type deferred = Type.NONE;
     private List<String> selected = new ArrayList<>();
+
+    private final List<ActionRow> rows = new ArrayList<>();
 
     public Callback(ButtonInteractionEvent event) {
         this.interactionExecutor = event;
@@ -101,6 +107,17 @@ public final class Callback {
         return this;
     }
 
+    /**
+     * Adds an action row with the components.
+     *
+     * @param components The components to add to the action row.
+     * @return The callback instance for chaining.
+     */
+    public Callback with(ActionComponent... components) {
+        this.rows.add(ActionRow.of(components));
+        return this;
+    }
+
     // ---------- REPLY METHODS ---------- \\
 
     public void edit(String message) {
@@ -119,21 +136,6 @@ public final class Callback {
         this.send(embed, Type.REPLY);
     }
 
-    public Callback edit(Button... buttons) {
-        this.edit(ActionRow.of(buttons));
-        return this;
-    }
-
-    public Callback edit(SelectMenu menu) {
-        this.edit(ActionRow.of(menu));
-        return this;
-    }
-
-    public Callback edit(ActionRow row) {
-        this.send(row, Type.EDIT);
-        return this;
-    }
-
     /**
      * Internal message sending/updating method.
      *
@@ -143,37 +145,77 @@ public final class Callback {
         switch (this.deferred) {
             case EDIT -> {
                 var hook = this.interactionExecutor.getHook();
+
+                WebhookMessageEditAction<Message> action;
                 if (message instanceof String msg) {
-                    hook.editOriginal(msg).queue();
+                    action = hook.editOriginal(msg);
                 } else if (message instanceof MessageEmbed embed) {
-                    hook.editOriginalEmbeds(embed).queue();
-                } else if (message instanceof ActionRow row) {
-                    hook.editOriginalComponents(row).queue();
+                    action = hook.editOriginalEmbeds(embed);
+                } else {
+                    throw new RuntimeException("Cannot edit non-message content");
                 }
+
+                if (!this.rows.isEmpty()) {
+                    action.setComponents(this.rows);
+                    this.rows.clear();
+                }
+                action.queue();
             }
 
             case REPLY -> {
                 var hook = this.interactionExecutor.getHook();
+
+                WebhookMessageCreateAction<?> action;
                 if (message instanceof String msg) {
-                    hook.sendMessage(msg).queue();
+                    action = hook.sendMessage(msg);
                 } else if (message instanceof MessageEmbed embed) {
-                    hook.sendMessageEmbeds(embed).queue();
+                    action = hook.sendMessageEmbeds(embed);
+                } else {
+                    throw new RuntimeException("Cannot reply without message content");
                 }
+
+                if (!this.rows.isEmpty()) {
+                    action.setComponents(this.rows);
+                    this.rows.clear();
+                }
+                action.queue();
             }
 
             case NONE -> {
                 if (type == Type.EDIT) {
+                    MessageEditCallbackAction edit;
                     if (message instanceof String msg) {
-                        this.interactionExecutor.editMessage(msg).queue();
+                        edit = this.interactionExecutor.editMessage(msg);
                     } else if (message instanceof MessageEmbed embed) {
-                        this.interactionExecutor.editMessageEmbeds(embed).queue();
+                        edit = this.interactionExecutor.editMessageEmbeds(embed);
+                    } else {
+                        throw new RuntimeException("Cannot edit non-message content");
                     }
+
+                    if (!this.rows.isEmpty()) {
+                        edit.setComponents(this.rows);
+                        this.rows.clear();
+                    }
+                    edit.queue();
+
+                    this.deferred = Type.EDIT;
                 } else {
+                    ReplyCallbackAction reply;
                     if (message instanceof String msg) {
-                        this.interactionExecutor.reply(msg).queue();
+                        reply = this.interactionExecutor.reply(msg);
                     } else if (message instanceof MessageEmbed embed) {
-                        this.interactionExecutor.replyEmbeds(embed).queue();
+                        reply = this.interactionExecutor.replyEmbeds(embed);
+                    } else {
+                        throw new RuntimeException("Cannot reply without message content");
                     }
+
+                    if (!this.rows.isEmpty()) {
+                        reply.setComponents(this.rows);
+                        this.rows.clear();
+                    }
+                    reply.queue();
+
+                    this.deferred = Type.REPLY;
                 }
             }
         }
