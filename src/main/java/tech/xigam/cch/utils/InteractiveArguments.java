@@ -60,7 +60,7 @@ public final class InteractiveArguments {
 
             this.command.prepareForExecution(
                     new ArrayList<>(this.answers.values()), this.message, this.member,
-                    this.channel, false, this.handler
+                    this.channel, true, this.handler
             );
         } else {
             response.reply(

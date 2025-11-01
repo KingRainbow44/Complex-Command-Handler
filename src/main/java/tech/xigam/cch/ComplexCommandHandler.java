@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -22,8 +23,6 @@ import net.dv8tion.jda.api.interactions.commands.build.*;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tech.xigam.cch.command.*;
 import tech.xigam.cch.command.modifiers.Arguments;
 import tech.xigam.cch.command.modifiers.Baseless;
@@ -86,6 +85,19 @@ public final class ComplexCommandHandler extends ListenerAdapter {
     /*
      * Executing commands.
      */
+
+    /**
+     * Starts an interactive arguments session.
+     *
+     * @param start The channel to start the session in.
+     * @param arguments The interactive arguments session to start.
+     */
+    public void startInteractive(Message start, InteractiveArguments arguments) {
+        if (this.argumentSessions.containsKey(arguments.getMember().getId())) return;
+
+        this.argumentSessions.put(arguments.getMember().getId(), arguments);
+        arguments.start(start);
+    }
 
     private void runCommand(String command, MessageReceivedEvent event) {
         executeCommand(command, event.getMessage(), event.getMember(), event.getChannel());
@@ -255,6 +267,24 @@ public final class ComplexCommandHandler extends ListenerAdapter {
     @Override
     public void onMessageContextInteraction(@NotNull MessageContextInteractionEvent event) {
         this.runCommand(event);
+    }
+
+    @Override
+    public void onModalInteraction(@NotNull ModalInteractionEvent event) {
+        var rawReference = event.getModalId();
+        if (!rawReference.startsWith("<"))
+            return;
+
+        var label = rawReference.split("<")[1].split(">")[0];
+        var command = commands.get(label);
+        if (command == null) {
+            event.reply("Command not found.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        command.prepareForCallback(label, event, this);
     }
 
     /**

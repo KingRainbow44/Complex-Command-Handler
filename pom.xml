@@ -7,7 +7,7 @@
 
     <groupId>tech.xigam</groupId>
     <artifactId>CCH</artifactId>
-    <version>1.10.0-SNAPSHOT</version>
+    <version>1.10.1-SNAPSHOT</version>
 
     <name>Complex Command Handler</name>
     <description>A really useful and simple command handler for JDA.</description>
@@ -42,6 +42,7 @@
     <!-- 1.9.1 - Allow buttons to work in user-installable apps. -->
     <!-- 1.9.2 - Add consumers for exceptions. -->
     <!-- 1.10.0 - [BREAKING] Better callback support -->
+    <!-- 1.10.1 - Properly handle interactive arguments. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

@@ -6,6 +6,7 @@ import lombok.experimental.Tolerate;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -106,7 +107,7 @@ public abstract class Command implements BaseCommand
         }
 
         if (executeBase) {
-            if (this instanceof Arguments thisArguments) {
+            if (this instanceof Arguments thisArguments && this.interactiveArguments.isEmpty()) {
                 var requiredArguments = 0;
                 for (var argument : thisArguments.getArguments()) {
                     if (argument.required) requiredArguments++;
@@ -127,9 +128,10 @@ public abstract class Command implements BaseCommand
             } catch (Throwable throwable) {
                 handler.onExecutionError.accept(interaction, throwable);
             } else {
-                new InteractiveArguments(
+                var interactive = new InteractiveArguments(
                         message, sender, this, interactiveArguments, handler
                 );
+                handler.startInteractive(message, interactive);
             }
         }
     }
@@ -243,6 +245,21 @@ public abstract class Command implements BaseCommand
 
     @Override
     public void prepareForCallback(String cmdLabel, StringSelectInteractionEvent event, ComplexCommandHandler handler) {
+        var callback = new Callback(event);
+        var callable = this instanceof Callable thisCallable ? thisCallable : null;
+
+        if (subCommands.containsKey(cmdLabel)) {
+            var subCmd = this.getSubCommand(cmdLabel);
+            if (subCmd instanceof Callable subCallable) {
+                callable = subCallable;
+            }
+        }
+
+        this.doCallback(callable, callback, handler);
+    }
+
+    @Override
+    public void prepareForCallback(String cmdLabel, ModalInteractionEvent event, ComplexCommandHandler handler) {
         var callback = new Callback(event);
         var callable = this instanceof Callable thisCallable ? thisCallable : null;
 

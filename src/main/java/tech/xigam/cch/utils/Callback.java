@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
@@ -12,6 +13,7 @@ import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.components.ActionComponent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.MessageEditCallbackAction;
@@ -49,7 +51,8 @@ public final class Callback {
      */
     @Getter private final InteractionContextType context;
 
-    private final GenericComponentInteractionCreateEvent interactionExecutor;
+    private GenericComponentInteractionCreateEvent interactionExecutor;
+    private ModalInteractionEvent modalExecutor;
 
     private Type deferred = Type.NONE;
     private List<String> selected = new ArrayList<>();
@@ -77,6 +80,17 @@ public final class Callback {
 
         this.context = event.getContext();
         this.selected = event.getSelectedOptions().stream().map(SelectOption::getValue).toList();
+    }
+
+    public Callback(ModalInteractionEvent event) {
+        this.modalExecutor = event;
+        this.member = event.getMember();
+        this.user = event.getUser();
+
+        var rawReference = event.getModalId();
+        this.reference = rawReference.split(">")[1];
+
+        this.context = event.getContext();
     }
 
     /**
@@ -134,6 +148,15 @@ public final class Callback {
 
     public void reply(MessageEmbed embed) {
         this.send(embed, Type.REPLY);
+    }
+
+    /**
+     * Replies with a modal.
+     *
+     * @param modal The modal to reply with.
+     */
+    public void reply(Modal modal) {
+        this.interactionExecutor.replyModal(modal).queue();
     }
 
     /**
