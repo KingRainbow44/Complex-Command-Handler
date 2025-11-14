@@ -73,7 +73,7 @@ public interface BaseCommand {
      * @return The button.
      */
     default Button createButton(ButtonStyle style, String reference, String text) {
-        return Button.of(style, isUrl(reference) ? reference : "<" + this.getLabel().toLowerCase() + ">" + reference, text);
+        return Button.of(style, isUrl(reference) ? reference : "<" + this.getLabel() + ">" + reference, text);
     }
 
     /**
@@ -85,7 +85,7 @@ public interface BaseCommand {
      * @return The button.
      */
     default Button createButton(ButtonStyle style, String reference, Emoji emoji) {
-        return Button.of(style, isUrl(reference) ? reference : "<" + this.getLabel().toLowerCase() + ">" + reference, emoji);
+        return Button.of(style, isUrl(reference) ? reference : "<" + this.getLabel() + ">" + reference, emoji);
     }
 
     /**
@@ -98,7 +98,7 @@ public interface BaseCommand {
      * @return The button.
      */
     default Button createButton(ButtonStyle style, String reference, String text, Emoji emoji) {
-        return Button.of(style, isUrl(reference) ? reference : "<" + this.getLabel().toLowerCase() + ">" + reference, text, emoji);
+        return Button.of(style, isUrl(reference) ? reference : "<" + this.getLabel() + ">" + reference, text, emoji);
     }
 
     /**
@@ -110,7 +110,7 @@ public interface BaseCommand {
      */
     default SelectMenu createSelectMenu(String reference, MenuOption... options) {
         if (options.length == 0) throw new IllegalArgumentException("At least one option must be provided.");
-        return StringSelectMenu.create("<" + this.getLabel().toLowerCase() + ">" + reference)
+        return StringSelectMenu.create("<" + this.getLabel() + ">" + reference)
                 .addOptions(Arrays.stream(options).map(MenuOption::asOption).toList()).build();
     }
 
@@ -124,7 +124,7 @@ public interface BaseCommand {
      */
     default SelectMenu createSelectMenu(String reference, String placeHolder, MenuOption... options) {
         if (options.length == 0) throw new IllegalArgumentException("At least one option must be provided.");
-        return StringSelectMenu.create("<" + this.getLabel().toLowerCase() + ">" + reference)
+        return StringSelectMenu.create("<" + this.getLabel() + ">" + reference)
                 .setPlaceholder(placeHolder).addOptions(Arrays.stream(options).map(MenuOption::asOption).toList()).build();
     }
 
@@ -136,7 +136,7 @@ public interface BaseCommand {
      * @return The modal builder.
      */
     default Modal.Builder modal(String reference, String title) {
-        var id = "<%s>%s".formatted(this.getLabel().toLowerCase(), reference);
+        var id = "<%s>%s".formatted(this.getLabel(), reference);
         return Modal.create(id, title);
     }
 }
