@@ -54,6 +54,7 @@ public final class Callback {
     private GenericComponentInteractionCreateEvent interactionExecutor;
     private ModalInteractionEvent modalExecutor;
 
+    private boolean ephemeral = false;
     private Type deferred = Type.NONE;
     private List<String> selected = new ArrayList<>();
 
@@ -109,6 +110,11 @@ public final class Callback {
 
     // ---------- UTILITY METHODS ---------- \\
 
+    public Callback setEphemeral() {
+        this.ephemeral = true;
+        return this;
+    }
+
     public Callback deferEdit() {
         this.interactionExecutor.deferEdit().queue();
         this.deferred = Type.EDIT;
@@ -116,7 +122,10 @@ public final class Callback {
     }
 
     public Callback deferReply() {
-        this.interactionExecutor.deferReply().queue();
+        this.interactionExecutor
+                .deferReply()
+                .setEphemeral(this.ephemeral)
+                .queue();
         this.deferred = Type.REPLY;
         return this;
     }
@@ -236,7 +245,9 @@ public final class Callback {
                         reply.setComponents(this.rows);
                         this.rows.clear();
                     }
-                    reply.queue();
+                    reply
+                            .setEphemeral(this.ephemeral)
+                            .queue();
 
                     this.deferred = Type.REPLY;
                 }
