@@ -1,7 +1,7 @@
 package tech.xigam.cch.utils;
 
+import net.dv8tion.jda.api.components.selections.SelectOption;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import org.jetbrains.annotations.Nullable;
 
 public final class MenuOption {

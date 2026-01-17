@@ -1,6 +1,10 @@
 package tech.xigam.cch.utils;
 
 import lombok.Getter;
+import net.dv8tion.jda.api.components.MessageTopLevelComponent;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.actionrow.ActionRowChildComponent;
+import net.dv8tion.jda.api.components.selections.SelectOption;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -10,10 +14,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionContextType;
-import net.dv8tion.jda.api.interactions.components.ActionComponent;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
-import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.MessageEditCallbackAction;
@@ -22,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -58,7 +60,7 @@ public final class Callback {
     private Type deferred = Type.NONE;
     private List<String> selected = new ArrayList<>();
 
-    private final List<ActionRow> rows = new ArrayList<>();
+    private final List<MessageTopLevelComponent> rows = new ArrayList<>();
 
     public Callback(ButtonInteractionEvent event) {
         this.interactionExecutor = event;
@@ -136,8 +138,8 @@ public final class Callback {
      * @param components The components to add to the action row.
      * @return The callback instance for chaining.
      */
-    public Callback with(ActionComponent... components) {
-        this.rows.add(ActionRow.of(components));
+    public Callback with(ActionRowChildComponent... components) {
+        this.rows.add(ActionRow.of(Arrays.asList(components)));
         return this;
     }
 

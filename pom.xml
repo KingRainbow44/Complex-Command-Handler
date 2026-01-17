@@ -7,7 +7,7 @@
 
     <groupId>tech.xigam</groupId>
     <artifactId>CCH</artifactId>
-    <version>1.10.3-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
 
     <name>Complex Command Handler</name>
     <description>A really useful and simple command handler for JDA.</description>
@@ -45,6 +45,7 @@
     <!-- 1.10.1 - Properly handle interactive arguments. -->
     <!-- 1.10.2 - Fix label setting for modal elements. -->
     <!-- 1.10.3 - Allow ephemeral callback elements. -->
+    <!-- 2.0.0 - Upgrade to JDA 6 & message components v2. -->
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -81,9 +82,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.github.freya022</groupId>
+            <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>e88cfadcb8</version>
+            <version>6.3.0</version>
             <scope>provided</scope>
         </dependency>
 

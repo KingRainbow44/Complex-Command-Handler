@@ -2,6 +2,10 @@ package tech.xigam.cch.utils;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.components.MessageTopLevelComponent;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.selections.SelectMenu;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
@@ -11,10 +15,7 @@ import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionE
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
-import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
@@ -31,6 +32,7 @@ import java.util.function.Consumer;
 
 @Slf4j
 public final class Interaction {
+    @Getter
     private final boolean isSlash, inGuild;
     @Getter
     private final ComplexCommandHandler commandHandler;
@@ -71,7 +73,7 @@ public final class Interaction {
     private final Map<String, Object> arguments = new HashMap<>();
     private final List<String> rawArguments = new ArrayList<>();
 
-    private final List<ActionRow> actionRows = new ArrayList<>();
+    private final List<MessageTopLevelComponent> components = new ArrayList<>();
 
     public Interaction(ComplexCommandHandler commandHandler, GenericCommandInteractionEvent event, BaseCommand command) {
         this.commandHandler = commandHandler;
@@ -213,10 +215,6 @@ public final class Interaction {
         return type.cast(this.arguments.getOrDefault(reference, fallback));
     }
 
-    public boolean isSlash() {
-        return this.isSlash;
-    }
-
     public boolean isFromGuild() {
         return this.inGuild;
     }
@@ -288,12 +286,12 @@ public final class Interaction {
     // ---------- INTERACTABLE METHODS ---------- \\
 
     public Interaction addButtons(Button... buttons) {
-        this.actionRows.add(ActionRow.of(buttons));
+        this.components.add(ActionRow.of(Arrays.asList(buttons)));
         return this;
     }
 
     public Interaction addSelectMenu(SelectMenu menu) {
-        this.actionRows.add(ActionRow.of(menu));
+        this.components.add(ActionRow.of(menu));
         return this;
     }
 
@@ -385,7 +383,7 @@ public final class Interaction {
                     throw new IllegalArgumentException("Invalid message type: " + message.getClass().getName());
                 }
 
-                if (!this.actionRows.isEmpty()) send = send.addComponents(this.actionRows);
+                if (!this.components.isEmpty()) send = send.addComponents(this.components);
                 send.queue();
             } else {
                 ReplyCallbackAction send;
@@ -400,7 +398,7 @@ public final class Interaction {
                     throw new IllegalArgumentException("Invalid message type: " + message.getClass().getName());
                 }
 
-                if (!this.actionRows.isEmpty()) send = send.addComponents(this.actionRows);
+                if (!this.components.isEmpty()) send = send.addComponents(this.components);
                 send.setEphemeral(this.isEphemeral()).queue();
             }
         } else {
@@ -418,7 +416,7 @@ public final class Interaction {
                         throw new IllegalArgumentException("Invalid message type: " + message.getClass().getName());
                     }
 
-                    if (!this.actionRows.isEmpty()) send = send.addComponents(this.actionRows);
+                    if (!this.components.isEmpty()) send = send.addComponents(this.components);
                     send.queue();
                 });
             } else {
@@ -437,7 +435,7 @@ public final class Interaction {
                     throw new IllegalArgumentException("Invalid message type: " + message.getClass().getName());
                 }
 
-                if (!this.actionRows.isEmpty()) send = send.setComponents(this.actionRows);
+                if (!this.components.isEmpty()) send = send.setComponents(this.components);
                 send.mentionRepliedUser(mentionUser).queue();
             }
         }

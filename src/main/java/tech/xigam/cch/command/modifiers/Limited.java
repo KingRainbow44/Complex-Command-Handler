@@ -1,6 +1,7 @@
 package tech.xigam.cch.command.modifiers;
 
 import net.dv8tion.jda.api.interactions.InteractionContextType;
+import tech.xigam.cch.command.Command;
 
 /**
  * Declares a command as limited, allowing you to change:
@@ -10,7 +11,7 @@ import net.dv8tion.jda.api.interactions.InteractionContextType;
 public interface Limited {
     /**
      * @return Whether the command is only accessible in guilds.
-     * @deprecated Use {@link tech.xigam.cch.command.Command#setContext(InteractionContextType...)} instead.
+     * @deprecated Use {@link Command#setContext(InteractionContextType...)} instead.
      */
     @Deprecated
     default boolean isGuildOnly() {
