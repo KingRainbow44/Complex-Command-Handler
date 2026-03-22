@@ -73,6 +73,7 @@ public final class Interaction {
     private final Map<String, Object> arguments = new HashMap<>();
     private final List<String> rawArguments = new ArrayList<>();
 
+    private final List<FileUpload> files = new ArrayList<>();
     private final List<MessageTopLevelComponent> components = new ArrayList<>();
 
     public Interaction(ComplexCommandHandler commandHandler, GenericCommandInteractionEvent event, BaseCommand command) {
@@ -283,6 +284,11 @@ public final class Interaction {
         return this;
     }
 
+    public Interaction attachFile(FileUpload... file) {
+        this.files.addAll(Arrays.asList(file));
+        return this;
+    }
+
     // ---------- INTERACTABLE METHODS ---------- \\
 
     public Interaction addButtons(Button... buttons) {
@@ -384,6 +390,8 @@ public final class Interaction {
                 }
 
                 if (!this.components.isEmpty()) send = send.addComponents(this.components);
+                if (!this.files.isEmpty()) send = send.addFiles(this.files);
+
                 send.queue();
             } else {
                 ReplyCallbackAction send;
@@ -399,6 +407,8 @@ public final class Interaction {
                 }
 
                 if (!this.components.isEmpty()) send = send.addComponents(this.components);
+                if (!this.files.isEmpty()) send = send.addFiles(this.files);
+
                 send.setEphemeral(this.isEphemeral()).queue();
             }
         } else {
@@ -417,6 +427,8 @@ public final class Interaction {
                     }
 
                     if (!this.components.isEmpty()) send = send.addComponents(this.components);
+                    if (!this.files.isEmpty()) send = send.addFiles(this.files);
+
                     send.queue();
                 });
             } else {
@@ -435,7 +447,9 @@ public final class Interaction {
                     throw new IllegalArgumentException("Invalid message type: " + message.getClass().getName());
                 }
 
-                if (!this.components.isEmpty()) send = send.setComponents(this.components);
+                if (!this.components.isEmpty()) send = send.addComponents(this.components);
+                if (!this.files.isEmpty()) send = send.addFiles(this.files);
+
                 send.mentionRepliedUser(mentionUser).queue();
             }
         }
